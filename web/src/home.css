@@ -1,0 +1,464 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap');
+
+/* ---------- palette ----------
+   cream bg:        #F5F3EE
+   card white:      #FFFFFF
+   dark text:       #1F2A24
+   gray text:       #8A8F8B
+   gold accent:     #D9A62E
+--------------------------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #E9E7E2; /* neutral page outside the phone */
+  font-family: 'Jost', 'Poppins', 'Century Gothic', 'Futura', sans-serif;
+  color: #1F2A24;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hs-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  background: #E9E7E2;
+}
+
+/* The phone frame */
+.hs-phone {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #F8F6F1 0%, #F5F3EE 22%, #F3F1EB 100%);
+  padding: 24px 20px 100px;
+  overflow-x: hidden;
+}
+
+.hs-phone h1,
+.hs-phone h2,
+.hs-phone p,
+.hs-phone ul {
+  margin: 0;
+}
+
+/* ---------- cards ---------- */
+
+.hs-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(30, 42, 35, 0.06);
+}
+
+/* ---------- 1. header ---------- */
+
+.hs-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.hs-greeting {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1F2A24;
+  line-height: 1.15;
+}
+
+.hs-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  background: #F8EFD4;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #C9A02C;
+  white-space: nowrap;
+}
+
+.hs-rank-sparkle {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.hs-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.hs-bell-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 14px;
+  background: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(30, 42, 35, 0.08);
+  color: #1F2A24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hs-bell-dot {
+  position: absolute;
+  top: 11px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #E25555;
+}
+
+.hs-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+/* ---------- 2. total earned ---------- */
+
+.hs-total-card {
+  padding: 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hs-total-label {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8A8F8B;
+}
+
+.hs-total-amount {
+  margin-top: 10px;
+  font-size: 44px;
+  font-weight: 700;
+  color: #D9A62E;
+  line-height: 1;
+}
+
+.hs-total-rupee {
+  margin-right: 2px;
+}
+
+.hs-total-decimals {
+  font-size: 18px;
+  font-weight: 600;
+  color: #B5B8B4;
+  vertical-align: baseline;
+  position: relative;
+  top: -3px;
+  margin-left: 2px;
+}
+
+.hs-month-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  background: #F1EFE9;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6E736F;
+}
+
+.hs-month-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #D9A62E;
+}
+
+/* ---------- 3. stat cards ---------- */
+
+.hs-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.hs-stat-card {
+  padding: 24px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hs-stat-chip {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #E9F0E7;
+  color: #1F2A24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hs-stat-value {
+  margin-top: 12px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1F2A24;
+  line-height: 1.1;
+}
+
+.hs-stat-label {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #8A8F8B;
+}
+
+/* ---------- 4. next payout ---------- */
+
+.hs-payout-card {
+  margin-top: 18px;
+  padding: 20px;
+}
+
+.hs-payout-top {
+  display: flex;
+  align-items: center;
+}
+
+.hs-date-tile {
+  width: 60px;
+  height: 64px;
+  border-radius: 14px;
+  background: #F1EFE9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hs-date-month {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #6E736F;
+}
+
+.hs-date-day {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1F2A24;
+  line-height: 1.15;
+}
+
+.hs-payout-mid {
+  flex: 1;
+  margin-left: 12px;
+  min-width: 0;
+}
+
+.hs-payout-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1F2A24;
+}
+
+.hs-payout-sub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #8A8F8B;
+}
+
+.hs-payout-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.hs-payout-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1F2A24;
+  line-height: 1.15;
+}
+
+.hs-payout-locked {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #8A8F8B;
+}
+
+.hs-rank-row {
+  margin-top: 18px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hs-rank-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1F2A24;
+}
+
+.hs-rank-away {
+  font-size: 13px;
+  color: #55605A;
+  text-align: right;
+}
+
+.hs-rank-next {
+  color: #D9A62E;
+  font-weight: 600;
+}
+
+.hs-progress-track {
+  margin-top: 10px;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #E7E5DF;
+  overflow: hidden;
+}
+
+.hs-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #253B2F 0%, #16221B 100%);
+}
+
+/* ---------- 5-6. recent conversions ---------- */
+
+.hs-section-heading {
+  margin-top: 26px;
+  margin-bottom: 14px;
+  font-size: 19px;
+  font-weight: 700;
+  color: #1F2A24;
+}
+
+.hs-conversion-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hs-conversion-card {
+  border-radius: 20px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+}
+
+.hs-conversion-chip {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #E9F0E7;
+  color: #1F2A24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hs-conversion-mid {
+  flex: 1;
+  margin-left: 12px;
+  min-width: 0;
+}
+
+.hs-conversion-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1F2A24;
+}
+
+.hs-conversion-label {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: #8A8F8B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hs-conversion-amount {
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1F2A24;
+  flex-shrink: 0;
+}
+
+/* ---------- 7. bottom nav ---------- */
+
+.hs-bottom-nav {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: calc(430px - 32px);
+  height: 64px;
+  background: #FFFFFF;
+  border-radius: 26px;
+  box-shadow: 0 10px 30px rgba(30, 42, 35, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 10;
+}
+
+.hs-nav-slot {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3A423C;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hs-nav-active {
+  background: #F0C243;
+  color: #1F2A24;
+}
