@@ -55,7 +55,7 @@ function insertCommission(db, { userId, kind, level = null, purchaseId, sourceUs
 
 // The core money path. Records a purchase and every commission it generates.
 // Returns { purchaseId, paid: [...], forfeited: [...] } for transparency.
-function recordPurchase(db, { buyerId, productCode, createdAt = null }) {
+function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, createdAt = null }) {
   const tx = db.transaction(() => {
     const buyer = db.prepare('SELECT * FROM users WHERE id = ?').get(buyerId);
     if (!buyer) throw new Error(`Unknown buyer ${buyerId}`);
@@ -63,10 +63,10 @@ function recordPurchase(db, { buyerId, productCode, createdAt = null }) {
     const gateOn = getSetting(db, 'qualification_gate') === 1;
 
     const purchaseInfo = createdAt
-      ? db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, created_at) VALUES (?, ?, ?, ?)')
-          .run(buyerId, product.id, product.price, createdAt)
-      : db.prepare('INSERT INTO purchases (buyer_id, product_id, amount) VALUES (?, ?, ?)')
-          .run(buyerId, product.id, product.price);
+      ? db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id, created_at) VALUES (?, ?, ?, ?, ?)')
+          .run(buyerId, product.id, product.price, campaignLinkId, createdAt)
+      : db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id) VALUES (?, ?, ?, ?)')
+          .run(buyerId, product.id, product.price, campaignLinkId);
     const purchaseId = purchaseInfo.lastInsertRowid;
 
     const paid = [];
@@ -148,7 +148,7 @@ function recordPurchase(db, { buyerId, productCode, createdAt = null }) {
 
 // Register a new affiliate: create the user record and record their ₹250
 // Registration purchase (which pays their upline + geo holders).
-function registerAffiliate(db, { name, email = null, phone = null, pincode, sponsorId = null, joinedAt = null }) {
+function registerAffiliate(db, { name, email = null, phone = null, pincode, sponsorId = null, campaignLinkId = null, joinedAt = null }) {
   const tx = db.transaction(() => {
     const info = joinedAt
       ? db.prepare('INSERT INTO users (name, email, phone, pincode, sponsor_id, joined_at) VALUES (?, ?, ?, ?, ?, ?)')
@@ -156,7 +156,7 @@ function registerAffiliate(db, { name, email = null, phone = null, pincode, spon
       : db.prepare('INSERT INTO users (name, email, phone, pincode, sponsor_id) VALUES (?, ?, ?, ?, ?)')
           .run(name, email, phone, pincode, sponsorId);
     const userId = info.lastInsertRowid;
-    const result = recordPurchase(db, { buyerId: userId, productCode: 'REG', createdAt: joinedAt });
+    const result = recordPurchase(db, { buyerId: userId, productCode: 'REG', campaignLinkId, createdAt: joinedAt });
     return { userId, ...result };
   });
   return tx();

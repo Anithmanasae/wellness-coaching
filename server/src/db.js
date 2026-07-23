@@ -133,13 +133,26 @@ function migrate(db) {
       PRIMARY KEY (product_id, level)
     );
 
+    -- A shareable referral campaign link owned by an affiliate.
+    CREATE TABLE IF NOT EXISTS campaign_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      slug TEXT UNIQUE NOT NULL,
+      title TEXT NOT NULL,
+      tag TEXT,
+      product_id INTEGER REFERENCES products(id),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     -- A purchase is any product bought by a user (registration is a purchase
     -- of the REG product). It is the event that generates commissions.
+    -- campaign_link_id attributes the purchase to the link that drove it.
     CREATE TABLE IF NOT EXISTS purchases (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       buyer_id INTEGER NOT NULL REFERENCES users(id),
       product_id INTEGER NOT NULL REFERENCES products(id),
       amount REAL NOT NULL,
+      campaign_link_id INTEGER REFERENCES campaign_links(id),
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -173,8 +186,21 @@ function migrate(db) {
     CREATE TABLE IF NOT EXISTS link_clicks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
+      campaign_link_id INTEGER REFERENCES campaign_links(id),
       clicked_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    -- Payout requests / settlements. status: requested -> processing -> paid.
+    CREATE TABLE IF NOT EXISTS payouts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      reference_no TEXT NOT NULL,
+      amount REAL NOT NULL,
+      method TEXT NOT NULL DEFAULT 'Bank Transfer',
+      status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('requested','processing','paid','failed')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_payouts_user ON payouts(user_id, created_at);
   `);
 }
 

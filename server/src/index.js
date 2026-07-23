@@ -2,6 +2,9 @@ const express = require('express');
 const { createDb } = require('./db');
 const { registerAffiliate, recordPurchase, holdersForPincode } = require('./engine');
 const { getDashboard } = require('./dashboard');
+const { getLinks, slugify } = require('./links');
+const { getWallet, requestPayout } = require('./wallet');
+const { getLeaderboard } = require('./leaderboard');
 
 const db = createDb();
 const app = express();
@@ -49,10 +52,57 @@ app.post('/api/purchases', (req, res) => {
   }
 });
 
-// Track a referral-link click.
+// Track a referral-link click (optionally attributed to a campaign link).
 app.post('/api/users/:id/clicks', (req, res) => {
-  db.prepare('INSERT INTO link_clicks (user_id) VALUES (?)').run(Number(req.params.id));
+  const { campaignLinkId } = req.body || {};
+  db.prepare('INSERT INTO link_clicks (user_id, campaign_link_id) VALUES (?, ?)')
+    .run(Number(req.params.id), campaignLinkId || null);
   res.status(201).json({ ok: true });
+});
+
+// Links & Creatives screen payload.
+app.get('/api/users/:id/links', (req, res) => {
+  const data = getLinks(db, Number(req.params.id));
+  if (!data) return res.status(404).json({ error: 'user not found' });
+  res.json(data);
+});
+
+// Create a campaign link for an affiliate.
+app.post('/api/users/:id/links', (req, res) => {
+  const { title, tag, productCode } = req.body || {};
+  if (!title) return res.status(400).json({ error: 'title is required' });
+  const userId = Number(req.params.id);
+  const product = productCode ? db.prepare('SELECT id FROM products WHERE code = ?').get(productCode) : null;
+  const base = slugify(title);
+  let slug = base;
+  let n = 1;
+  while (db.prepare('SELECT 1 FROM campaign_links WHERE slug = ?').get(slug)) slug = `${base}-${++n}`;
+  const info = db
+    .prepare('INSERT INTO campaign_links (user_id, slug, title, tag, product_id) VALUES (?, ?, ?, ?, ?)')
+    .run(userId, slug, title, tag || null, product ? product.id : null);
+  res.status(201).json({ id: info.lastInsertRowid, slug });
+});
+
+// Wallet / Payouts screen payload.
+app.get('/api/users/:id/wallet', (req, res) => {
+  const data = getWallet(db, Number(req.params.id));
+  if (!data) return res.status(404).json({ error: 'user not found' });
+  res.json(data);
+});
+
+// Request a payout of the current locked balance.
+app.post('/api/users/:id/payouts', (req, res) => {
+  try {
+    const result = requestPayout(db, Number(req.params.id), { method: (req.body || {}).method });
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Leaderboard standings (pass ?me=<id> to locate the current user).
+app.get('/api/leaderboard', (req, res) => {
+  res.json(getLeaderboard(db, req.query.me != null ? Number(req.query.me) : null));
 });
 
 // Commission ledger for a user.
