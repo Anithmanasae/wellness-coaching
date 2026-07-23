@@ -1,24 +1,22 @@
-// Demo seed for the coach's team, built through the real commission engine so
-// every number on Jessica's home screen is genuinely computed, not faked:
-//   Total earned this month  ₹1,250.00
-//   Link clicks              842
-//   Conversions              14
-//   Next payout (locked)     ₹450.00
-//   Rank                     Gold, 3 sales away from Platinum
-//   Recent: Ananya R. +₹65.00 (Cleanse Program Referral),
-//           Marcus K. +₹12.50 (Subscription Plan renewal)
+// Demo seed for the coach's team, built entirely through the real engine so
+// every number on Jessica's home screen is genuinely computed.
+//
+// Jessica owns Package 3, so she is the PIN-code (area) holder for 560001 and
+// qualifies (tier 5) to earn on her recruits' registrations and packages.
 const fs = require('fs');
 const { createDb, DB_PATH } = require('./db');
-const { registerAffiliate, recordSale } = require('./engine');
+const { registerAffiliate, recordPurchase } = require('./engine');
+const { getDashboard } = require('./dashboard');
 
 if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
+['-shm', '-wal'].forEach((s) => fs.existsSync(DB_PATH + s) && fs.unlinkSync(DB_PATH + s));
 const db = createDb();
 
 const now = new Date();
 const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-const day = (d, time) => `${ym}-${String(d).padStart(2, '0')} ${time}`;
+const at = (d, time = '11:00:00') => `${ym}-${String(d).padStart(2, '0')} ${time}`;
 
-// --- Geography: Bengaluru Urban district and its 5 taluks -------------------
+// --- Geography: Bengaluru Urban and its 5 taluks ---------------------------
 const pincodes = [
   ['560001', 'Shivajinagar', 'Bangalore North', 'Bengaluru Urban'],
   ['560003', 'Malleswaram', 'Bangalore North', 'Bengaluru Urban'],
@@ -30,78 +28,51 @@ const pincodes = [
 const insPin = db.prepare('INSERT INTO pincodes (pincode, area_name, taluk, district) VALUES (?, ?, ?, ?)');
 for (const p of pincodes) insPin.run(...p);
 
-// --- Territory managers (created first, then assigned) ----------------------
-const arjun = registerAffiliate(db, { name: 'Arjun M.', email: 'arjun@example.com', pincode: '560001' });
-const deepa = registerAffiliate(db, { name: 'Deepa S.', email: 'deepa@example.com', pincode: '560003' });
-const suresh = registerAffiliate(db, { name: 'Suresh K.', email: 'suresh@example.com', pincode: '560004' });
-const insMgr = db.prepare('INSERT INTO territory_managers (level, territory, user_id) VALUES (?, ?, ?)');
-insMgr.run('area', '560001', arjun);
-insMgr.run('taluk', 'Bangalore North', deepa);
-insMgr.run('district', 'Bengaluru Urban', suresh);
+// --- Territory holders (taluk + district) ----------------------------------
+// The coach / upline leaders. Deepa holds the taluk, Suresh the district.
+const deepa = registerAffiliate(db, { name: 'Deepa S.', pincode: '560003', joinedAt: at(1, '08:00:00') }).userId;
+const suresh = registerAffiliate(db, { name: 'Suresh K.', pincode: '560004', joinedAt: at(1, '08:05:00') }).userId;
+recordPurchase(db, { buyerId: deepa, productCode: 'P5' }); // grants Bangalore North taluk
+const insHolder = db.prepare('INSERT OR IGNORE INTO territory_holders (level, territory, user_id) VALUES (?, ?, ?)');
+insHolder.run('district', 'Bengaluru Urban', suresh);
 
-// --- Products ---------------------------------------------------------------
-const insProduct = db.prepare('INSERT INTO products (name, price) VALUES (?, ?)');
-const retreat = insProduct.run('Wellness Retreat Pass', 800).lastInsertRowid;
-const subscription = insProduct.run('Subscription Plan', 250).lastInsertRowid;
-const tea = insProduct.run('Herbal Tea Kit', 100).lastInsertRowid;
-const cleanse = insProduct.run('Cleanse Program', 650).lastInsertRowid;
+// --- Jessica: sponsored by Deepa, buys Package 3 (becomes 560001 area holder)
+const jessica = registerAffiliate(db, { name: 'Jessica', email: 'jessica@example.com', pincode: '560001', sponsorId: deepa, joinedAt: at(2, '09:00:00') }).userId;
+recordPurchase(db, { buyerId: jessica, productCode: 'P3', createdAt: at(2, '09:30:00') });
 
-// --- Team: Jessica and her downline ----------------------------------------
-// Registering them fires the geo join bonuses to Arjun/Deepa/Suresh.
-const jessica = registerAffiliate(db, {
-  name: 'Jessica', email: 'jessica@example.com', pincode: '560001', joinedAt: day(1, '09:00:00'),
-});
-const priya = registerAffiliate(db, {
-  name: 'Priya N.', email: 'priya@example.com', pincode: '560003', sponsorId: jessica, joinedAt: day(2, '09:00:00'),
-});
-const rohan = registerAffiliate(db, {
-  name: 'Rohan V.', email: 'rohan@example.com', pincode: '560043', sponsorId: priya, joinedAt: day(3, '09:00:00'),
-});
-
-// --- Jessica's 14 personal sales, walking her Bronze -> Silver -> Gold ------
-// 5 x ₹800 at Bronze 20%  = ₹800.00 (these get paid out)
-// 5 x ₹250 at Silver 22%  = ₹275.00
-// 3 x ₹100 + 1 x ₹90 at Gold 25% = ₹97.50
-const customers = ['Kavya T.', 'Nikhil B.', 'Sara J.', 'Vivek P.', 'Meera L.',
-  'Aditya R.', 'Farah H.', 'Dinesh C.', 'Lakshmi V.', 'Tanya G.',
-  'Ishaan D.', 'Pooja M.', 'Ritu S.', 'Karan W.'];
-let d = 2;
-for (let i = 0; i < 5; i++) {
-  recordSale(db, { sellerId: jessica, productId: retreat, customerName: customers[i], createdAt: day(d++, '11:00:00') });
+// --- Jessica's downline ------------------------------------------------------
+// 12 direct recruits register under Jessica (12 conversions + ₹100 L-1 each,
+// and ₹100 area override each for those in 560001). A few then buy packages,
+// adding more conversions and larger L-1 payouts, taking her to 14 conversions
+// (Gold, 3 away from Platinum) and a realistic month's earnings.
+const recruits = [
+  ['Ananya R.', '560001'], ['Marcus K.', '560001'], ['Kavya T.', '560001'],
+  ['Nikhil B.', '560001'], ['Sara J.', '560003'], ['Vivek P.', '560001'],
+  ['Meera L.', '560001'], ['Aditya R.', '560043'], ['Farah H.', '560001'],
+  ['Dinesh C.', '560001'], ['Lakshmi V.', '560001'], ['Tanya G.', '560064'],
+];
+const recruitIds = {};
+let day = 3;
+for (const [name, pin] of recruits) {
+  recruitIds[name] = registerAffiliate(db, { name, pincode: pin, sponsorId: jessica, joinedAt: at(day++, '10:00:00') }).userId;
 }
-for (let i = 5; i < 10; i++) {
-  recordSale(db, { sellerId: jessica, productId: subscription, customerName: customers[i], createdAt: day(d++, '11:00:00') });
-}
-for (let i = 10; i < 13; i++) {
-  recordSale(db, { sellerId: jessica, productId: tea, customerName: customers[i], createdAt: day(d++, '11:00:00') });
-}
-recordSale(db, { sellerId: jessica, productId: tea, customerName: customers[13], amount: 90, createdAt: day(d++, '11:00:00') });
 
-// --- Downline activity that lands on Jessica's home screen ------------------
-// Rohan (level 2 under Jessica) renews Marcus K.'s subscription -> Jessica +₹12.50
-recordSale(db, {
-  sellerId: rohan, productId: subscription, customerName: 'Marcus K.',
-  note: 'Subscription Plan renewal', createdAt: day(16, '10:00:00'),
-});
-// Priya (level 1 under Jessica) sells a Cleanse Program to Ananya R. -> Jessica +₹65.00
-recordSale(db, {
-  sellerId: priya, productId: cleanse, customerName: 'Ananya R.',
-  note: 'Cleanse Program Referral', createdAt: day(17, '15:00:00'),
-});
+// --- Second generation: a recruit of a recruit (gives Jessica an L-2) --------
+const rohan = registerAffiliate(db, { name: 'Rohan V.', pincode: '560043', sponsorId: recruitIds['Ananya R.'], joinedAt: at(15, '12:00:00') }).userId;
+recordPurchase(db, { buyerId: rohan, productCode: 'P1', createdAt: at(15, '13:00:00') }); // Jessica L-2 +₹350
 
-// --- Payout state: her first five commissions have already been paid --------
-db.prepare(
-  `UPDATE commissions SET status = 'paid' WHERE id IN (
-     SELECT id FROM commissions WHERE user_id = ? AND type = 'personal_sale'
-     ORDER BY created_at LIMIT 5)`
-).run(jessica);
+// Two recruits upgrade to packages — Jessica (tier 5) qualifies for both.
+// These are the most recent activity, so they surface on the home screen.
+recordPurchase(db, { buyerId: recruitIds['Ananya R.'], productCode: 'P1', createdAt: at(16, '15:00:00') }); // Jessica +₹2000
+recordPurchase(db, { buyerId: recruitIds['Marcus K.'], productCode: 'P2', createdAt: at(17, '15:00:00') }); // Jessica +₹3000
 
-// --- 842 link clicks --------------------------------------------------------
+// --- 842 referral-link clicks ------------------------------------------------
 const insClick = db.prepare('INSERT INTO link_clicks (user_id, clicked_at) VALUES (?, ?)');
 const clickTx = db.transaction(() => {
-  for (let i = 0; i < 842; i++) insClick.run(jessica, day(1 + (i % 17), '12:00:00'));
+  for (let i = 0; i < 842; i++) insClick.run(jessica, at(2 + (i % 18), '12:00:00'));
 });
 clickTx();
 
-console.log('Seed complete.');
-console.log({ jessica, priya, rohan, arjun, deepa, suresh });
+const dash = getDashboard(db, jessica);
+console.log('Seed complete. Jessica id =', jessica);
+console.log(JSON.stringify(dash, null, 2));

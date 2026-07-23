@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import HomeScreen from './HomeScreen.jsx';
 
 // Jessica is the demo login; a real auth flow would set this.
-const CURRENT_USER_ID = 4;
+const CURRENT_USER_ID = 3;
 
 export default function App() {
   const [dashboard, setDashboard] = useState(null);
