@@ -4,6 +4,8 @@
 const fs = require('fs');
 const { openDb, DB_PATH } = require('./db');
 const { registerAffiliate, recordPurchase } = require('./engine');
+const { requestPayout } = require('./wallet');
+const { hashPassword } = require('./auth');
 const { getDashboard } = require('./dashboard');
 const { getLinks } = require('./links');
 const { getWallet } = require('./wallet');
@@ -22,12 +24,9 @@ async function main() {
       if (fs.existsSync(DB_PATH + suffix)) fs.unlinkSync(DB_PATH + suffix);
     }
   }
-  const db = await openDb();
-  if (driver === 'pg') {
-    // Wipe transactional data (keep reference tables) and reset ids so the
-    // demo is deterministic (Jessica = id 3) like a fresh SQLite file.
-    await db.exec('TRUNCATE users, pincodes, campaign_links, purchases, payouts, commissions, link_clicks, territory_holders RESTART IDENTITY CASCADE');
-  }
+  // pg: drop + recreate for a fresh, current schema (SQLite starts fresh via
+  // the file delete above). Ids stay deterministic (Jessica = 3).
+  const db = await openDb({ reset: driver === 'pg' });
 
   const setTierMax = (id) => db.run('UPDATE users SET highest_tier_rank = 99 WHERE id = ?', [id]);
 
@@ -60,6 +59,7 @@ async function main() {
   const jessica = (await registerAffiliate(db, { name: 'Jessica', email: 'jessica@example.com', pincode: '560001', sponsorId: deepa, joinedAt: isoDay(60, '09:00:00') })).userId;
   await setTierMax(jessica);
   await recordPurchase(db, { buyerId: jessica, productCode: 'P3', createdAt: isoDay(59) });
+  await db.run('UPDATE users SET title = ?, location = ?, password_hash = ? WHERE id = ?', ['Wellness Advocate', 'Bengaluru', hashPassword('jessica123'), jessica]);
 
   const linkA = (await db.get("INSERT INTO campaign_links (user_id, slug, title, tag, created_at) VALUES (?, 'holistic-reset', 'Holistic Reset Package', 'Health Reset', ?) RETURNING id", [jessica, isoDay(45, '09:00:00')])).id;
   const linkB = (await db.get("INSERT INTO campaign_links (user_id, slug, title, tag, created_at) VALUES (?, 'elite-performance', 'Elite Performance Protocol', 'High Performance', ?) RETURNING id", [jessica, isoDay(12, '09:00:00')])).id;
@@ -115,29 +115,40 @@ async function main() {
   const nextName = () => NAME_POOL[namePtr++ % NAME_POOL.length];
 
   const RURAL = ['561203', '562157', '561101', '562149', '562123'];
+  // name, recruits, packages, title, location, requestsPayout
   const leaders = [
-    ['Marcus V.', 30, ['P5', 'P5', 'P4']],
-    ['Julianne R.', 18, ['P4', 'P4', 'P4']],
-    ['Elena S.', 17, ['P5', 'P4']],
-    ['Dr. Sarah Chen', 17, ['P4', 'P4']],
-    ['Oliver Bennett', 30, ['P4']],
-    ['Amara Okafor', 17, ['P3', 'P3', 'P3']],
-    ['Rahul Mehta', 11, ['P3', 'P2']],
-    ['Nadia Khan', 6, ['P2', 'P2']],
-    ['Liam Wong', 5, ['P1', 'P6']],
+    ['Marcus V.', 30, ['P5', 'P5', 'P4'], 'Executive Performance Coach', 'New York', false],
+    ['Julianne R.', 18, ['P4', 'P4', 'P4'], 'Holistic Nutrition Expert', 'Madrid', true],
+    ['Elena S.', 17, ['P5', 'P4'], 'Integrative Wellness Lead', 'London', false],
+    ['Dr. Sarah Chen', 17, ['P4', 'P4'], 'Mindfulness Systems Specialist', 'Singapore', true],
+    ['Oliver Bennett', 30, ['P4'], 'Peak Performance Mentor', 'Sydney', true],
+    ['Amara Okafor', 17, ['P3', 'P3', 'P3'], 'Life Transformation Coach', 'Lagos', true],
+    ['Rahul Mehta', 11, ['P3', 'P2'], 'Wellness Program Director', 'Bengaluru', true],
+    ['Nadia Khan', 6, ['P2', 'P2'], 'Health & Habit Consultant', 'Dubai', true],
+    ['Liam Wong', 5, ['P1', 'P6'], 'Fitness & Recovery Coach', 'Hong Kong', false],
   ];
   let leadAgo = 100;
+  const requesters = [];
   for (let li = 0; li < leaders.length; li++) {
-    const [name, recruits, pkgs] = leaders[li];
+    const [name, recruits, pkgs, title, location, requests] = leaders[li];
     const pin = RURAL[li % RURAL.length];
     const leaderId = (await registerAffiliate(db, { name, pincode: pin, joinedAt: isoDay(leadAgo, '08:00:00') })).userId;
     await setTierMax(leaderId);
+    await db.run('UPDATE users SET title = ?, location = ? WHERE id = ?', [title, location, leaderId]);
     for (let i = 0; i < recruits; i++) {
       const r = (await registerAffiliate(db, { name: nextName(), pincode: pin, sponsorId: leaderId, joinedAt: isoDay(leadAgo - 1, '09:00:00') })).userId;
       if (i < pkgs.length) await recordPurchase(db, { buyerId: r, productCode: pkgs[i], createdAt: isoDay(leadAgo - 2, '10:00:00') });
     }
+    if (requests) requesters.push(leaderId);
     leadAgo -= 3;
   }
+
+  // Several affiliates request payouts -> the coach's approval queue.
+  for (const id of requesters) await requestPayout(db, id, {});
+
+  // The wellness coach account (login: coach@epiclife.academy / coach123).
+  // Created last so affiliate ids stay deterministic (Jessica = 3).
+  await db.run("INSERT INTO users (name, email, role, password_hash) VALUES (?, ?, 'coach', ?)", ['Coach Varadarajan', 'coach@epiclife.academy', hashPassword('coach123')]);
 
   // --- Report ----------------------------------------------------------------
   console.log(`Seed complete (driver: ${driver}). Jessica id =`, jessica);

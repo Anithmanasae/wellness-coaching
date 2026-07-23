@@ -6,6 +6,8 @@ const { getLinks, slugify } = require('./links');
 const { getWallet, requestPayout, approvePayout, settlePayout, rejectPayout } = require('./wallet');
 const { getLeaderboard } = require('./leaderboard');
 const { recordClick, recordConversion } = require('./referral');
+const { verifyPassword, signToken, verifyToken } = require('./auth');
+const { getOverview, listAffiliates, pendingPayouts } = require('./coach');
 
 const CONVERSION_SECRET = process.env.CONVERSION_SECRET || 'dev-secret';
 const PORT = process.env.PORT || 4000;
@@ -29,6 +31,51 @@ async function buildApp() {
   });
 
   app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+  // ---- Auth ----------------------------------------------------------------
+  app.post('/api/login', wrap(async (req, res) => {
+    const { email, password } = req.body || {};
+    const user = email ? await db.get('SELECT * FROM users WHERE lower(email) = lower(?)', [email]) : null;
+    if (!user || !verifyPassword(password, user.password_hash)) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    const token = signToken({ userId: user.id, role: user.role });
+    res.json({ token, user: { id: user.id, name: user.name, role: user.role } });
+  }));
+
+  // Attach req.auth from a Bearer token when present.
+  const authenticate = (req) => {
+    const header = req.get('Authorization') || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+    return token ? verifyToken(token) : null;
+  };
+  const requireCoach = (handler) => wrap(async (req, res) => {
+    const auth = authenticate(req);
+    if (!auth) return res.status(401).json({ error: 'authentication required' });
+    if (auth.role !== 'coach') return res.status(403).json({ error: 'coach access only' });
+    req.auth = auth;
+    return handler(req, res);
+  });
+
+  // Who am I (lets the frontend restore role/session on load).
+  app.get('/api/me', wrap(async (req, res) => {
+    const auth = authenticate(req);
+    if (!auth) return res.status(401).json({ error: 'not authenticated' });
+    const user = await db.get('SELECT id, name, role FROM users WHERE id = ?', [auth.userId]);
+    if (!user) return res.status(401).json({ error: 'not authenticated' });
+    res.json({ user });
+  }));
+
+  // ---- Coach ---------------------------------------------------------------
+  app.get('/api/coach/overview', requireCoach(async (req, res) => {
+    res.json(await getOverview(db, req.auth.userId));
+  }));
+  app.get('/api/coach/affiliates', requireCoach(async (req, res) => {
+    res.json(await listAffiliates(db, { search: req.query.search || '', tier: req.query.tier || '' }));
+  }));
+  app.get('/api/coach/payouts', requireCoach(async (req, res) => {
+    res.json(await pendingPayouts(db));
+  }));
 
   // Public referral redirect: record the click, forward to the coach's course
   // page carrying the referral code through to checkout.
@@ -108,7 +155,8 @@ async function buildApp() {
       [status]
     ));
   }));
-  const payoutAction = (fn) => wrap(async (req, res) => res.json(await fn(db, Number(req.params.id))));
+  // Coach-only actions on a payout.
+  const payoutAction = (fn) => requireCoach(async (req, res) => res.json(await fn(db, Number(req.params.id))));
   app.post('/api/payouts/:id/approve', payoutAction(approvePayout));
   app.post('/api/payouts/:id/settle', payoutAction(settlePayout));
   app.post('/api/payouts/:id/reject', payoutAction(rejectPayout));

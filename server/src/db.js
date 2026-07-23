@@ -72,6 +72,10 @@ function schema(dialect) {
       pincode TEXT,
       sponsor_id INTEGER REFERENCES users(id),
       referral_code TEXT UNIQUE,
+      role TEXT NOT NULL DEFAULT 'affiliate' CHECK (role IN ('affiliate','coach')),
+      password_hash TEXT,
+      title TEXT,
+      location TEXT,
       highest_tier_rank INTEGER NOT NULL DEFAULT 0,
       rank TEXT NOT NULL DEFAULT 'Bronze',
       joined_at ${TS}
@@ -210,15 +214,18 @@ async function seedReferenceData(db) {
 
 // Open (and migrate + seed) a database. Driver from opts.driver or DB_DRIVER
 // ('sqlite' default). For sqlite, opts.file (default DB_PATH, or ':memory:').
+const ALL_TABLES = 'commissions, payouts, purchases, campaign_links, territory_holders, link_clicks, geo_levels, commission_levels, products, pincodes, ranks, settings, users';
+
 async function openDb(opts = {}) {
   const driver = opts.driver || process.env.DB_DRIVER || 'sqlite';
   const db = createAdapter(driver === 'sqlite' ? { driver, file: opts.file || DB_PATH } : { driver, connectionString: opts.connectionString });
-  await db.exec(schema(db.dialect));
-  // Postgres shares one database across callers; opts.reset (or DB_RESET) wipes
-  // everything for a clean slate — used by the test suite for per-test isolation.
+  // Postgres shares one database across callers (unlike SQLite, which starts
+  // from a fresh file/:memory:). opts.reset (or DB_RESET) drops and recreates
+  // everything so the schema is always current — used by the seed and tests.
   if ((opts.reset || process.env.DB_RESET) && db.dialect === 'pg') {
-    await db.exec('TRUNCATE users, pincodes, products, commission_levels, geo_levels, territory_holders, campaign_links, purchases, payouts, commissions, settings, ranks, link_clicks RESTART IDENTITY CASCADE');
+    await db.exec(`DROP TABLE IF EXISTS ${ALL_TABLES} CASCADE`);
   }
+  await db.exec(schema(db.dialect));
   await seedReferenceData(db);
   return db;
 }
