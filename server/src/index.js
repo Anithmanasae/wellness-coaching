@@ -3,7 +3,7 @@ const { createDb } = require('./db');
 const { registerAffiliate, recordPurchase, holdersForPincode } = require('./engine');
 const { getDashboard } = require('./dashboard');
 const { getLinks, slugify } = require('./links');
-const { getWallet, requestPayout } = require('./wallet');
+const { getWallet, requestPayout, approvePayout, settlePayout, rejectPayout } = require('./wallet');
 const { getLeaderboard } = require('./leaderboard');
 
 const db = createDb();
@@ -90,7 +90,7 @@ app.get('/api/users/:id/wallet', (req, res) => {
   res.json(data);
 });
 
-// Request a payout of the current locked balance.
+// Affiliate: request a payout of the current available balance (awaits coach approval).
 app.post('/api/users/:id/payouts', (req, res) => {
   try {
     const result = requestPayout(db, Number(req.params.id), { method: (req.body || {}).method });
@@ -99,6 +99,32 @@ app.post('/api/users/:id/payouts', (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+// Coach: pending payout requests awaiting approval, across all affiliates.
+app.get('/api/payouts', (req, res) => {
+  const status = req.query.status || 'requested';
+  const rows = db
+    .prepare(
+      `SELECT p.*, u.name AS affiliate_name FROM payouts p
+       JOIN users u ON u.id = p.user_id
+       WHERE p.status = ? ORDER BY p.created_at ASC`
+    )
+    .all(status);
+  res.json(rows);
+});
+
+// Coach actions on a payout: approve (-> processing), settle (-> paid), reject (-> released).
+// TODO(phase 2): protect these behind the coach role once auth exists.
+const payoutAction = (fn) => (req, res) => {
+  try {
+    res.json(fn(db, Number(req.params.id)));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+app.post('/api/payouts/:id/approve', payoutAction(approvePayout));
+app.post('/api/payouts/:id/settle', payoutAction(settlePayout));
+app.post('/api/payouts/:id/reject', payoutAction(rejectPayout));
 
 // Leaderboard standings (pass ?me=<id> to locate the current user).
 app.get('/api/leaderboard', (req, res) => {

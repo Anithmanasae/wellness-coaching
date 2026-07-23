@@ -166,7 +166,10 @@ function migrate(db) {
       source_user_id INTEGER REFERENCES users(id),
       product_id INTEGER REFERENCES products(id),
       amount REAL NOT NULL,
-      status TEXT NOT NULL DEFAULT 'locked' CHECK (status IN ('locked','paid')),
+      -- locked: earned, available   requested: reserved in a pending payout
+      -- awaiting coach approval     paid: settled to the affiliate
+      status TEXT NOT NULL DEFAULT 'locked' CHECK (status IN ('locked','requested','paid')),
+      payout_id INTEGER REFERENCES payouts(id),
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_commissions_user ON commissions(user_id, created_at);
@@ -197,7 +200,9 @@ function migrate(db) {
       reference_no TEXT NOT NULL,
       amount REAL NOT NULL,
       method TEXT NOT NULL DEFAULT 'Bank Transfer',
-      status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('requested','processing','paid','failed')),
+      -- requested: awaiting coach approval   processing: approved, disbursing
+      -- paid: settled   rejected: declined by coach (commissions released)
+      status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('requested','processing','paid','rejected')),
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_payouts_user ON payouts(user_id, created_at);

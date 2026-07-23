@@ -42,7 +42,7 @@ const STATUS = {
 const statusOf = (s) => STATUS[s] || STATUS.requested;
 
 export default function WalletScreen({ data, userId, onNavigate, onChanged }) {
-  const { totalPayoutsToDate, prestige, pendingCommissions, nextSettlement, verifyingCount, transactions } = data;
+  const { totalPayoutsToDate, prestige, pendingCommissions, hasPendingRequest, nextSettlement, verifyingCount, transactions } = data;
 
   const [requesting, setRequesting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -92,10 +92,10 @@ export default function WalletScreen({ data, userId, onNavigate, onChanged }) {
               type="button"
               className="wl-btn wl-btn-primary"
               onClick={requestPayout}
-              disabled={requesting}
+              disabled={requesting || hasPendingRequest}
             >
               <Wallet size={18} />
-              <span>{requesting ? 'Requesting…' : 'Request Payout'}</span>
+              <span>{hasPendingRequest ? 'Awaiting Approval' : requesting ? 'Requesting…' : 'Request Payout'}</span>
             </button>
             <button type="button" className="wl-btn wl-btn-outline">
               <Statement size={18} />
