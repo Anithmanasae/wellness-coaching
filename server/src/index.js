@@ -5,6 +5,9 @@ const { getDashboard } = require('./dashboard');
 const { getLinks, slugify } = require('./links');
 const { getWallet, requestPayout, approvePayout, settlePayout, rejectPayout } = require('./wallet');
 const { getLeaderboard } = require('./leaderboard');
+const { recordClick, recordConversion } = require('./referral');
+
+const CONVERSION_SECRET = process.env.CONVERSION_SECRET || 'dev-secret';
 
 const db = createDb();
 const app = express();
@@ -20,6 +23,29 @@ app.use((req, res, next) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// Public referral redirect. An affiliate's shared link points here; we record
+// the click and forward the visitor to the coach's course page, carrying the
+// referral code through so it survives to checkout.
+app.get('/ref/:code', (req, res) => {
+  const { destination } = recordClick(db, req.params.code);
+  res.redirect(302, destination);
+});
+
+// Sale postback from the coach's site. Attributes the sale to the referring
+// affiliate and fires the whole commission cascade. Secured by a shared secret.
+app.post('/api/conversions', (req, res) => {
+  if ((req.get('X-Webhook-Secret') || '') !== CONVERSION_SECRET) {
+    return res.status(401).json({ error: 'invalid webhook secret' });
+  }
+  const { ref, productCode, externalOrderId, customerName, customerEmail, pincode } = req.body || {};
+  try {
+    const result = recordConversion(db, { ref, productCode, externalOrderId, customerName, customerEmail, pincode });
+    res.status(result.duplicate ? 200 : 201).json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // Home screen payload.
 app.get('/api/users/:id/dashboard', (req, res) => {

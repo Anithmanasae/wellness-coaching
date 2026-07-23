@@ -82,8 +82,9 @@ function migrate(db) {
       name TEXT NOT NULL,
       email TEXT UNIQUE,
       phone TEXT,
-      pincode TEXT NOT NULL,
+      pincode TEXT,
       sponsor_id INTEGER REFERENCES users(id),
+      referral_code TEXT UNIQUE,
       highest_tier_rank INTEGER NOT NULL DEFAULT 0,
       rank TEXT NOT NULL DEFAULT 'Bronze',
       joined_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -153,6 +154,7 @@ function migrate(db) {
       product_id INTEGER NOT NULL REFERENCES products(id),
       amount REAL NOT NULL,
       campaign_link_id INTEGER REFERENCES campaign_links(id),
+      external_order_id TEXT UNIQUE,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 

@@ -2,6 +2,7 @@
 // performance of each of their campaign links.
 
 const REFERRAL_BASE = process.env.REFERRAL_BASE || 'premium-wellness.club/ref/';
+const COURSE_URL = process.env.COURSE_URL || 'https://epiclife.academy/course.asp';
 
 function slugify(name) {
   return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -34,6 +35,7 @@ function getLinks(db, userId, now = new Date()) {
       slug: link.slug,
       title: link.title,
       tag: link.tag,
+      shareUrl: `${REFERRAL_BASE}${link.slug}`,
       clicks,
       conversions,
       conversionRate: clicks > 0 ? Math.round((conversions / clicks) * 1000) / 10 : 0,
@@ -42,9 +44,12 @@ function getLinks(db, userId, now = new Date()) {
     };
   });
 
+  const referralCode = user.referral_code || slugify(user.name);
   return {
     referralBase: REFERRAL_BASE,
-    referralCode: slugify(user.name),
+    referralCode,
+    referralUrl: `${REFERRAL_BASE}${referralCode}`,
+    destination: COURSE_URL,
     totalClicks: campaigns.reduce((s, c) => s + c.clicks, 0),
     campaigns,
   };

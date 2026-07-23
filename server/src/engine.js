@@ -21,6 +21,35 @@ function productByCode(db, code) {
   return p;
 }
 
+function slugifyName(name) {
+  return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'ref';
+}
+
+// Give a user a unique, human-readable referral code (their share link tail).
+function assignReferralCode(db, userId, name) {
+  const base = slugifyName(name);
+  let code = base;
+  let n = 1;
+  while (db.prepare('SELECT 1 FROM users WHERE referral_code = ? AND id != ?').get(code, userId)) {
+    code = `${base}-${++n}`;
+  }
+  db.prepare('UPDATE users SET referral_code = ? WHERE id = ?').run(code, userId);
+  return code;
+}
+
+// Insert a user node in the network (no purchase). Used both when an affiliate
+// registers and when a referred customer first appears via a conversion.
+function createUserNode(db, { name, email = null, phone = null, pincode = null, sponsorId = null, joinedAt = null }) {
+  const info = joinedAt
+    ? db.prepare('INSERT INTO users (name, email, phone, pincode, sponsor_id, joined_at) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(name, email, phone, pincode, sponsorId, joinedAt)
+    : db.prepare('INSERT INTO users (name, email, phone, pincode, sponsor_id) VALUES (?, ?, ?, ?, ?)')
+        .run(name, email, phone, pincode, sponsorId);
+  const userId = info.lastInsertRowid;
+  assignReferralCode(db, userId, name);
+  return userId;
+}
+
 // Resolve the area/taluk/district holders for a pincode.
 // Returns { area, taluk, district } of userId | null.
 function holdersForPincode(db, pincode) {
@@ -55,7 +84,12 @@ function insertCommission(db, { userId, kind, level = null, purchaseId, sourceUs
 
 // The core money path. Records a purchase and every commission it generates.
 // Returns { purchaseId, paid: [...], forfeited: [...] } for transparency.
-function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, createdAt = null }) {
+function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, externalOrderId = null, createdAt = null }) {
+  // Idempotency: a repeated webhook for the same external order must not pay twice.
+  if (externalOrderId) {
+    const existing = db.prepare('SELECT id FROM purchases WHERE external_order_id = ?').get(externalOrderId);
+    if (existing) return { purchaseId: existing.id, duplicate: true, paid: [], forfeited: [] };
+  }
   const tx = db.transaction(() => {
     const buyer = db.prepare('SELECT * FROM users WHERE id = ?').get(buyerId);
     if (!buyer) throw new Error(`Unknown buyer ${buyerId}`);
@@ -63,10 +97,10 @@ function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, creat
     const gateOn = getSetting(db, 'qualification_gate') === 1;
 
     const purchaseInfo = createdAt
-      ? db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id, created_at) VALUES (?, ?, ?, ?, ?)')
-          .run(buyerId, product.id, product.price, campaignLinkId, createdAt)
-      : db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id) VALUES (?, ?, ?, ?)')
-          .run(buyerId, product.id, product.price, campaignLinkId);
+      ? db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id, external_order_id, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+          .run(buyerId, product.id, product.price, campaignLinkId, externalOrderId, createdAt)
+      : db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id, external_order_id) VALUES (?, ?, ?, ?, ?)')
+          .run(buyerId, product.id, product.price, campaignLinkId, externalOrderId);
     const purchaseId = purchaseInfo.lastInsertRowid;
 
     const paid = [];
@@ -150,12 +184,7 @@ function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, creat
 // Registration purchase (which pays their upline + geo holders).
 function registerAffiliate(db, { name, email = null, phone = null, pincode, sponsorId = null, campaignLinkId = null, joinedAt = null }) {
   const tx = db.transaction(() => {
-    const info = joinedAt
-      ? db.prepare('INSERT INTO users (name, email, phone, pincode, sponsor_id, joined_at) VALUES (?, ?, ?, ?, ?, ?)')
-          .run(name, email, phone, pincode, sponsorId, joinedAt)
-      : db.prepare('INSERT INTO users (name, email, phone, pincode, sponsor_id) VALUES (?, ?, ?, ?, ?)')
-          .run(name, email, phone, pincode, sponsorId);
-    const userId = info.lastInsertRowid;
+    const userId = createUserNode(db, { name, email, phone, pincode, sponsorId, joinedAt });
     const result = recordPurchase(db, { buyerId: userId, productCode: 'REG', campaignLinkId, createdAt: joinedAt });
     return { userId, ...result };
   });
@@ -205,6 +234,9 @@ function nextPayoutDate(db, from = new Date()) {
 module.exports = {
   recordPurchase,
   registerAffiliate,
+  createUserNode,
+  assignReferralCode,
+  slugifyName,
   holdersForPincode,
   conversionCount,
   rankForConversions,
