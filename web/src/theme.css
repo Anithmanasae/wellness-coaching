@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap');
+/* Fonts: a geometric-sans system stack (no external request, so the page
+   never blocks on a font CDN). Jost/Poppins are used if the OS has them. */
 
 /* ============================================================
    Shared design tokens + app shell (phone frame + bottom nav)
@@ -28,7 +29,7 @@ html, body { margin: 0; padding: 0; }
 
 body {
   background: #E9E7E2;
-  font-family: 'Jost', 'Poppins', 'Century Gothic', 'Futura', sans-serif;
+  font-family: 'Jost', 'Poppins', system-ui, -apple-system, 'Segoe UI', 'Century Gothic', sans-serif;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
