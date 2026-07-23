@@ -1,0 +1,107 @@
+/* Login screen */
+
+.lg-phone {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 40px;
+}
+
+.lg-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.lg-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.lg-brand-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.lg-head { margin-top: 48px; }
+.lg-title { font-size: 30px; font-weight: 700; color: var(--ink); }
+.lg-subtitle { margin-top: 8px; font-size: 15px; color: var(--gray); line-height: 1.5; }
+
+.lg-card {
+  margin-top: 28px;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+}
+.lg-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-2);
+  margin-bottom: 8px;
+}
+.lg-input {
+  border: 1.5px solid var(--line);
+  background: #FBFAF7;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--ink);
+  margin-bottom: 18px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.lg-input:focus { border-color: var(--gold-btn); }
+
+.lg-error {
+  color: #C0392B;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.lg-submit {
+  height: 54px;
+  border: none;
+  border-radius: 16px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(30, 42, 35, 0.18);
+}
+.lg-submit:disabled { opacity: 0.6; cursor: default; }
+
+.lg-demo { margin-top: 26px; }
+.lg-demo-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.lg-demo-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.lg-demo-hint { color: var(--gray); font-weight: 500; font-size: 12.5px; }

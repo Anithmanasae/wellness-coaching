@@ -3,19 +3,18 @@ import HomeScreen from './HomeScreen.jsx';
 import LinksScreen from './LinksScreen.jsx';
 import WalletScreen from './WalletScreen.jsx';
 import LeaderboardScreen from './LeaderboardScreen.jsx';
+import { api } from './api';
 
-// Jessica is the demo login; real auth will set this.
-const CURRENT_USER_ID = 3;
+// The affiliate experience for the logged-in user.
+export default function AffiliateApp({ user, onLogout }) {
+  const uid = user.id;
+  const ENDPOINTS = {
+    home: `/api/users/${uid}/dashboard`,
+    links: `/api/users/${uid}/links`,
+    wallet: `/api/users/${uid}/wallet`,
+    leaderboard: `/api/leaderboard?me=${uid}`,
+  };
 
-// Each tab knows how to fetch its own payload.
-const ENDPOINTS = {
-  home: `/api/users/${CURRENT_USER_ID}/dashboard`,
-  links: `/api/users/${CURRENT_USER_ID}/links`,
-  wallet: `/api/users/${CURRENT_USER_ID}/wallet`,
-  leaderboard: `/api/leaderboard?me=${CURRENT_USER_ID}`,
-};
-
-export default function App() {
   const [tab, setTab] = useState('home');
   const [cache, setCache] = useState({});
   const [error, setError] = useState(null);
@@ -23,19 +22,12 @@ export default function App() {
   useEffect(() => {
     if (cache[tab]) return;
     let alive = true;
-    fetch(ENDPOINTS[tab])
-      .then((r) => {
-        if (!r.ok) throw new Error(`API error ${r.status}`);
-        return r.json();
-      })
+    api(ENDPOINTS[tab])
       .then((data) => alive && setCache((c) => ({ ...c, [tab]: data })))
       .catch((e) => alive && setError(e.message));
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [tab, cache]);
 
-  // Re-fetch a tab's data after an action that changes it (e.g. payout request).
   const refresh = (key) => setCache((c) => {
     const next = { ...c };
     delete next[key];
@@ -43,7 +35,6 @@ export default function App() {
   });
 
   if (error) return <p style={{ padding: 24 }}>Could not load: {error}</p>;
-
   const data = cache[tab];
   if (!data) return <div className="screen-page"><div className="screen-phone" /></div>;
 
@@ -51,7 +42,7 @@ export default function App() {
     case 'links':
       return <LinksScreen data={data} onNavigate={setTab} />;
     case 'wallet':
-      return <WalletScreen data={data} userId={CURRENT_USER_ID} onNavigate={setTab} onChanged={() => refresh('wallet')} />;
+      return <WalletScreen data={data} userId={uid} onNavigate={setTab} onChanged={() => refresh('wallet')} />;
     case 'leaderboard':
       return <LeaderboardScreen data={data} onNavigate={setTab} />;
     case 'home':

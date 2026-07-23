@@ -1,0 +1,363 @@
+/* ============================================================
+   Coach — Payout Approvals screen
+   All classes prefixed cp-; reuses .app-card + shared theme tokens.
+   ============================================================ */
+
+/* ---------- 1. header ---------- */
+
+.cp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.cp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cp-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.cp-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.cp-bell {
+  border: none;
+  background: transparent;
+  padding: 6px;
+  margin: -6px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ---------- 2. summary strip ---------- */
+
+.cp-summary {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--green-deep-a) 0%, var(--green-deep-b) 100%);
+  box-shadow: var(--shadow-lg);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cp-summary-left {
+  min-width: 0;
+}
+
+.cp-summary-count {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: #FFFFFF;
+}
+
+.cp-summary-label {
+  margin-top: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.cp-summary-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.cp-summary-total-label {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.cp-summary-total {
+  margin-top: 5px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--gold);
+}
+
+/* ---------- 3. approval queue ---------- */
+
+.cp-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+}
+
+.cp-row {
+  padding: 18px;
+  margin-bottom: 14px;
+  transition: opacity 0.15s ease;
+}
+
+.cp-row:last-child {
+  margin-bottom: 0;
+}
+
+.cp-row--busy {
+  opacity: 0.55;
+}
+
+.cp-row-top {
+  display: flex;
+  align-items: center;
+}
+
+.cp-row-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.cp-row-mid {
+  flex: 1;
+  margin-left: 14px;
+  min-width: 0;
+}
+
+.cp-row-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-row-sub {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--gray);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-row-amount {
+  margin-left: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+  flex-shrink: 0;
+}
+
+/* meta line */
+
+.cp-row-meta {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cp-row-metatext {
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--gray);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-pill {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.cp-pill--requested {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.cp-pill--processing {
+  background: var(--stone);
+  color: var(--gray-2);
+}
+
+/* actions */
+
+.cp-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+}
+
+.cp-actions--single {
+  flex-direction: column;
+  gap: 9px;
+}
+
+.cp-btn {
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 15px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease;
+}
+
+.cp-btn:active {
+  transform: scale(0.985);
+}
+
+.cp-btn:disabled {
+  cursor: default;
+}
+
+.cp-btn svg {
+  flex-shrink: 0;
+}
+
+.cp-btn-approve {
+  flex: 1;
+  border: none;
+  background: var(--ink);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.cp-btn-reject {
+  flex: 1;
+  background: transparent;
+  border: 1.5px solid var(--line);
+  color: #C0392B;
+  font-weight: 600;
+}
+
+.cp-btn-reject:hover {
+  background: rgba(192, 57, 43, 0.05);
+  border-color: rgba(192, 57, 43, 0.35);
+}
+
+.cp-btn-pay {
+  width: 100%;
+  border: none;
+  background: var(--gold-btn);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.cp-helper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.cp-helper svg {
+  flex-shrink: 0;
+}
+
+/* in-flight spinner */
+
+.cp-spin {
+  display: flex;
+  animation: cp-rotate 0.85s linear infinite;
+}
+
+@keyframes cp-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* trust footer */
+
+.cp-secure {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--gray);
+}
+
+.cp-secure svg {
+  flex-shrink: 0;
+}
+
+/* ---------- 4. empty state ---------- */
+
+.cp-empty {
+  min-height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.cp-empty-chip {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--sage);
+  color: var(--green-deep-a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cp-empty-title {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cp-empty-text {
+  margin-top: 8px;
+  max-width: 260px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--gray);
+}

@@ -195,6 +195,54 @@ export function Statement({ size = 18 }) {
   );
 }
 
+export function People({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20c0-3.2 2.5-5.3 5.5-5.3s5.5 2.1 5.5 5.3" />
+      <path d="M16 5.2a3 3 0 0 1 0 5.6" />
+      <path d="M17.5 20c0-2.6-1-4.4-2.6-5.4" />
+    </svg>
+  );
+}
+
+export function Banknote({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <rect x="2.5" y="6" width="19" height="12" rx="2.5" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 9.5v.01" />
+      <path d="M18 14.5v.01" />
+    </svg>
+  );
+}
+
+export function Folder({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    </svg>
+  );
+}
+
+export function Chevron({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+export function Logout({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+      <path d="M10 17l-5-5 5-5" />
+      <path d="M15 12H5" />
+    </svg>
+  );
+}
+
 // A warm circular avatar placeholder (no external images allowed).
 export function Avatar({ size = 48 }) {
   return (
