@@ -13,24 +13,18 @@ function daysBetween(fromIso, now) {
   return Math.max(0, Math.floor((now - from) / (1000 * 60 * 60 * 24)));
 }
 
-function getLinks(db, userId, now = new Date()) {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+async function getLinks(db, userId, now = new Date()) {
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [userId]);
   if (!user) return null;
 
-  const links = db
-    .prepare('SELECT * FROM campaign_links WHERE user_id = ? ORDER BY created_at DESC')
-    .all(userId);
+  const links = await db.all('SELECT * FROM campaign_links WHERE user_id = ? ORDER BY created_at DESC', [userId]);
 
-  const clicksFor = db.prepare('SELECT COUNT(*) AS n FROM link_clicks WHERE campaign_link_id = ?');
-  const convFor = db.prepare(
-    'SELECT COUNT(*) AS n, COUNT(DISTINCT buyer_id) AS buyers FROM purchases WHERE campaign_link_id = ?'
-  );
-
-  const campaigns = links.map((link) => {
-    const clicks = clicksFor.get(link.id).n;
-    const conv = convFor.get(link.id);
-    const conversions = conv.n;
-    return {
+  const campaigns = [];
+  for (const link of links) {
+    const clicks = Number((await db.get('SELECT COUNT(*) AS n FROM link_clicks WHERE campaign_link_id = ?', [link.id])).n);
+    const conv = await db.get('SELECT COUNT(*) AS n, COUNT(DISTINCT buyer_id) AS buyers FROM purchases WHERE campaign_link_id = ?', [link.id]);
+    const conversions = Number(conv.n);
+    campaigns.push({
       id: link.id,
       slug: link.slug,
       title: link.title,
@@ -39,10 +33,10 @@ function getLinks(db, userId, now = new Date()) {
       clicks,
       conversions,
       conversionRate: clicks > 0 ? Math.round((conversions / clicks) * 1000) / 10 : 0,
-      converterCount: conv.buyers,
+      converterCount: Number(conv.buyers),
       activeDays: daysBetween(link.created_at, now),
-    };
-  });
+    });
+  }
 
   const referralCode = user.referral_code || slugify(user.name);
   return {

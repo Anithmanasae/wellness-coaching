@@ -1,18 +1,14 @@
-const Database = require('better-sqlite3');
 const path = require('path');
+const { createAdapter } = require('./adapter');
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'data.sqlite');
 
 // ---------------------------------------------------------------------------
-// Reference data — the coach's real commission plan.
-// All of this is seeded into tables so every number is editable at runtime
-// without touching code.
+// Reference data — the coach's real commission plan. Seeded into tables so
+// every number is editable at runtime without code changes.
 // ---------------------------------------------------------------------------
 
-// Products: [code, name, price, tier_rank, grants_territory]
-// tier_rank orders packages for the qualification gate (higher = bigger).
-// grants_territory: buying this package makes the buyer the protected holder
-// of that geographic level for their own pincode/taluk.
+// [code, name, price, tier_rank, grants_territory]
 const PRODUCTS = [
   ['REG', 'Registration – Life & Career Building Program', 250, 0, null],
   ['P7', 'Water Awareness + Potability Test + AMC + Career Intro', 4990, 1, null],
@@ -24,7 +20,6 @@ const PRODUCTS = [
   ['P5', 'Advanced Course + Territory Protection (Taluk)', 150000, 7, 'taluk'],
 ];
 
-// Fixed payout at each of the 12 upline levels, per product (L-1 .. L-12).
 const LEVEL_PAYOUTS = {
   REG: [100, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
   P1: [2000, 350, 150, 50, 50, 30, 30, 30, 30, 30, 25, 25],
@@ -36,29 +31,17 @@ const LEVEL_PAYOUTS = {
   P7: [1010, 300, 100, 100, 100, 50, 50, 20, 20, 20, 20, 20],
 };
 
-// Geographic override per product: [area, taluk, district].
-// Only Registration is quantified by the coach so far (₹100 each). Packages
-// default to 0 — set them here (or via the API) when the coach provides them.
+// [area, taluk, district] override per product. Only Registration is quantified
+// by the coach so far (₹100 each); packages default to 0.
 const GEO_PAYOUTS = {
   REG: [100, 100, 100],
-  P1: [0, 0, 0],
-  P2: [0, 0, 0],
-  P3: [0, 0, 0],
-  P4: [0, 0, 0],
-  P5: [0, 0, 0],
-  P6: [0, 0, 0],
-  P7: [0, 0, 0],
+  P1: [0, 0, 0], P2: [0, 0, 0], P3: [0, 0, 0], P4: [0, 0, 0],
+  P5: [0, 0, 0], P6: [0, 0, 0], P7: [0, 0, 0],
 };
 
-// Cosmetic advocate rank shown on the home screen. Earned by conversions
-// (downline purchases the advocate directly drove). Does NOT affect payouts —
-// this plan pays fixed amounts by level, independent of rank.
+// Cosmetic advocate rank by conversions. Does not affect payouts.
 const RANKS = [
-  ['Bronze', 0, 1],
-  ['Silver', 5, 2],
-  ['Gold', 10, 3],
-  ['Platinum', 17, 4],
-  ['Diamond', 30, 5],
+  ['Bronze', 0, 1], ['Silver', 5, 2], ['Gold', 10, 3], ['Platinum', 17, 4], ['Diamond', 30, 5],
 ];
 
 const SETTINGS = [
@@ -66,19 +49,23 @@ const SETTINGS = [
   ['payout_day', 15, 'Day of the month locked commissions are released.'],
 ];
 
-function createDb(dbPath = DB_PATH) {
-  const db = new Database(dbPath);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  migrate(db);
-  seedReferenceData(db);
-  return db;
+// Dialect-specific column fragments.
+function tokens(dialect) {
+  const pg = dialect === 'pg';
+  return {
+    PK: pg ? 'INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT',
+    REAL: pg ? 'DOUBLE PRECISION' : 'REAL',
+    TS: pg ? 'TIMESTAMPTZ NOT NULL DEFAULT now()' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP',
+  };
 }
 
-function migrate(db) {
-  db.exec(`
+function schema(dialect) {
+  const { PK, REAL, TS } = tokens(dialect);
+  // Tables are ordered so every foreign-key target exists first (Postgres
+  // resolves references eagerly, unlike SQLite).
+  return `
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${PK},
       name TEXT NOT NULL,
       email TEXT UNIQUE,
       phone TEXT,
@@ -87,10 +74,9 @@ function migrate(db) {
       referral_code TEXT UNIQUE,
       highest_tier_rank INTEGER NOT NULL DEFAULT 0,
       rank TEXT NOT NULL DEFAULT 'Bronze',
-      joined_at TEXT NOT NULL DEFAULT (datetime('now'))
+      joined_at ${TS}
     );
 
-    -- Every pincode maps to an area (locality), a taluk and a district.
     CREATE TABLE IF NOT EXISTS pincodes (
       pincode TEXT PRIMARY KEY,
       area_name TEXT NOT NULL,
@@ -98,10 +84,31 @@ function migrate(db) {
       district TEXT NOT NULL
     );
 
-    -- One protected holder per territory per level.
-    -- territory = pincode (area) | taluk name | district name.
+    CREATE TABLE IF NOT EXISTS products (
+      id ${PK},
+      code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      price ${REAL} NOT NULL,
+      tier_rank INTEGER NOT NULL,
+      grants_territory TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS commission_levels (
+      product_id INTEGER NOT NULL REFERENCES products(id),
+      level INTEGER NOT NULL CHECK (level BETWEEN 1 AND 12),
+      amount ${REAL} NOT NULL,
+      PRIMARY KEY (product_id, level)
+    );
+
+    CREATE TABLE IF NOT EXISTS geo_levels (
+      product_id INTEGER NOT NULL REFERENCES products(id),
+      level TEXT NOT NULL CHECK (level IN ('area','taluk','district')),
+      amount ${REAL} NOT NULL,
+      PRIMARY KEY (product_id, level)
+    );
+
     CREATE TABLE IF NOT EXISTS territory_holders (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${PK},
       level TEXT NOT NULL CHECK (level IN ('area','taluk','district')),
       territory TEXT NOT NULL,
       user_id INTEGER NOT NULL REFERENCES users(id),
@@ -109,76 +116,53 @@ function migrate(db) {
       UNIQUE (level, territory)
     );
 
-    CREATE TABLE IF NOT EXISTS products (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      code TEXT UNIQUE NOT NULL,
-      name TEXT NOT NULL,
-      price REAL NOT NULL,
-      tier_rank INTEGER NOT NULL,
-      grants_territory TEXT
-    );
-
-    -- Fixed payout for each upline level, per product.
-    CREATE TABLE IF NOT EXISTS commission_levels (
-      product_id INTEGER NOT NULL REFERENCES products(id),
-      level INTEGER NOT NULL CHECK (level BETWEEN 1 AND 12),
-      amount REAL NOT NULL,
-      PRIMARY KEY (product_id, level)
-    );
-
-    -- Geographic override per product, per territory level.
-    CREATE TABLE IF NOT EXISTS geo_levels (
-      product_id INTEGER NOT NULL REFERENCES products(id),
-      level TEXT NOT NULL CHECK (level IN ('area','taluk','district')),
-      amount REAL NOT NULL,
-      PRIMARY KEY (product_id, level)
-    );
-
-    -- A shareable referral campaign link owned by an affiliate.
     CREATE TABLE IF NOT EXISTS campaign_links (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${PK},
       user_id INTEGER NOT NULL REFERENCES users(id),
       slug TEXT UNIQUE NOT NULL,
       title TEXT NOT NULL,
       tag TEXT,
       product_id INTEGER REFERENCES products(id),
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at ${TS}
     );
 
-    -- A purchase is any product bought by a user (registration is a purchase
-    -- of the REG product). It is the event that generates commissions.
-    -- campaign_link_id attributes the purchase to the link that drove it.
     CREATE TABLE IF NOT EXISTS purchases (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${PK},
       buyer_id INTEGER NOT NULL REFERENCES users(id),
       product_id INTEGER NOT NULL REFERENCES products(id),
-      amount REAL NOT NULL,
+      amount ${REAL} NOT NULL,
       campaign_link_id INTEGER REFERENCES campaign_links(id),
       external_order_id TEXT UNIQUE,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at ${TS}
     );
 
-    -- Every rupee of commission is one ledger row. Never recomputed.
+    CREATE TABLE IF NOT EXISTS payouts (
+      id ${PK},
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      reference_no TEXT NOT NULL,
+      amount ${REAL} NOT NULL,
+      method TEXT NOT NULL DEFAULT 'Bank Transfer',
+      status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('requested','processing','paid','rejected')),
+      created_at ${TS}
+    );
+
     CREATE TABLE IF NOT EXISTS commissions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${PK},
       user_id INTEGER NOT NULL REFERENCES users(id),
       kind TEXT NOT NULL CHECK (kind IN ('level','geo_area','geo_taluk','geo_district')),
       level INTEGER,
       source_purchase_id INTEGER REFERENCES purchases(id),
       source_user_id INTEGER REFERENCES users(id),
       product_id INTEGER REFERENCES products(id),
-      amount REAL NOT NULL,
-      -- locked: earned, available   requested: reserved in a pending payout
-      -- awaiting coach approval     paid: settled to the affiliate
+      amount ${REAL} NOT NULL,
       status TEXT NOT NULL DEFAULT 'locked' CHECK (status IN ('locked','requested','paid')),
       payout_id INTEGER REFERENCES payouts(id),
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at ${TS}
     );
-    CREATE INDEX IF NOT EXISTS idx_commissions_user ON commissions(user_id, created_at);
 
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
-      value REAL NOT NULL,
+      value ${REAL} NOT NULL,
       description TEXT
     );
 
@@ -189,63 +173,54 @@ function migrate(db) {
     );
 
     CREATE TABLE IF NOT EXISTS link_clicks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${PK},
       user_id INTEGER NOT NULL REFERENCES users(id),
       campaign_link_id INTEGER REFERENCES campaign_links(id),
-      clicked_at TEXT NOT NULL DEFAULT (datetime('now'))
+      clicked_at ${TS}
     );
 
-    -- Payout requests / settlements. status: requested -> processing -> paid.
-    CREATE TABLE IF NOT EXISTS payouts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL REFERENCES users(id),
-      reference_no TEXT NOT NULL,
-      amount REAL NOT NULL,
-      method TEXT NOT NULL DEFAULT 'Bank Transfer',
-      -- requested: awaiting coach approval   processing: approved, disbursing
-      -- paid: settled   rejected: declined by coach (commissions released)
-      status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('requested','processing','paid','rejected')),
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    CREATE INDEX IF NOT EXISTS idx_commissions_user ON commissions(user_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_payouts_user ON payouts(user_id, created_at);
-  `);
+  `;
 }
 
-function seedReferenceData(db) {
-  const insProduct = db.prepare(
-    'INSERT OR IGNORE INTO products (code, name, price, tier_rank, grants_territory) VALUES (?, ?, ?, ?, ?)'
-  );
-  const insLevel = db.prepare(
-    'INSERT OR IGNORE INTO commission_levels (product_id, level, amount) VALUES (?, ?, ?)'
-  );
-  const insGeo = db.prepare(
-    'INSERT OR IGNORE INTO geo_levels (product_id, level, amount) VALUES (?, ?, ?)'
-  );
-  const geoLevelNames = ['area', 'taluk', 'district'];
-
-  const seed = db.transaction(() => {
+async function seedReferenceData(db) {
+  await db.tx(async (t) => {
+    const geoNames = ['area', 'taluk', 'district'];
     for (const [code, name, price, tier, territory] of PRODUCTS) {
-      insProduct.run(code, name, price, tier, territory);
-      const productId = db.prepare('SELECT id FROM products WHERE code = ?').get(code).id;
-
+      await t.run('INSERT INTO products (code, name, price, tier_rank, grants_territory) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING', [code, name, price, tier, territory]);
+      const product = await t.get('SELECT id FROM products WHERE code = ?', [code]);
       const payouts = LEVEL_PAYOUTS[code];
-      for (let i = 0; i < payouts.length; i++) insLevel.run(productId, i + 1, payouts[i]);
-
+      for (let i = 0; i < payouts.length; i++) {
+        await t.run('INSERT INTO commission_levels (product_id, level, amount) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', [product.id, i + 1, payouts[i]]);
+      }
       const geo = GEO_PAYOUTS[code];
-      for (let i = 0; i < geo.length; i++) insGeo.run(productId, geoLevelNames[i], geo[i]);
+      for (let i = 0; i < geo.length; i++) {
+        await t.run('INSERT INTO geo_levels (product_id, level, amount) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', [product.id, geoNames[i], geo[i]]);
+      }
     }
-
-    const insSetting = db.prepare(
-      'INSERT OR IGNORE INTO settings (key, value, description) VALUES (?, ?, ?)'
-    );
-    for (const [key, value, description] of SETTINGS) insSetting.run(key, value, description);
-
-    const insRank = db.prepare(
-      'INSERT OR IGNORE INTO ranks (name, min_conversions, sort_order) VALUES (?, ?, ?)'
-    );
-    for (const [name, min, order] of RANKS) insRank.run(name, min, order);
+    for (const [key, value, description] of SETTINGS) {
+      await t.run('INSERT INTO settings (key, value, description) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', [key, value, description]);
+    }
+    for (const [name, min, order] of RANKS) {
+      await t.run('INSERT INTO ranks (name, min_conversions, sort_order) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', [name, min, order]);
+    }
   });
-  seed();
 }
 
-module.exports = { createDb, DB_PATH, PRODUCTS, LEVEL_PAYOUTS, GEO_PAYOUTS };
+// Open (and migrate + seed) a database. Driver from opts.driver or DB_DRIVER
+// ('sqlite' default). For sqlite, opts.file (default DB_PATH, or ':memory:').
+async function openDb(opts = {}) {
+  const driver = opts.driver || process.env.DB_DRIVER || 'sqlite';
+  const db = createAdapter(driver === 'sqlite' ? { driver, file: opts.file || DB_PATH } : { driver, connectionString: opts.connectionString });
+  await db.exec(schema(db.dialect));
+  // Postgres shares one database across callers; opts.reset (or DB_RESET) wipes
+  // everything for a clean slate — used by the test suite for per-test isolation.
+  if ((opts.reset || process.env.DB_RESET) && db.dialect === 'pg') {
+    await db.exec('TRUNCATE users, pincodes, products, commission_levels, geo_levels, territory_holders, campaign_links, purchases, payouts, commissions, settings, ranks, link_clicks RESTART IDENTITY CASCADE');
+  }
+  await seedReferenceData(db);
+  return db;
+}
+
+module.exports = { openDb, DB_PATH, PRODUCTS, LEVEL_PAYOUTS, GEO_PAYOUTS };

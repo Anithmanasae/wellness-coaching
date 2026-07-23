@@ -76,47 +76,96 @@ this plan pays fixed amounts by level.
 Bengaluru Urban and its 5 taluks (Bangalore North, Bangalore South, Bangalore
 East, Yelahanka, Anekal).
 
+## Referral tracking & sale attribution
+
+Affiliates promote a link that points at **this app**, not directly at the
+course site, so sales can be traced back to them:
+
+1. **Share** — an affiliate's link is `{REFERRAL_BASE}{code}`, where `code` is
+   their personal `referral_code` or a campaign slug (e.g.
+   `premium-wellness.club/ref/jessica`).
+2. **Redirect** — a visitor opens it → `GET /ref/:code` records a click and
+   **302-redirects to the coach's course page** (`COURSE_URL`) with `?ref=<code>`
+   appended so the code survives to checkout.
+3. **Attribute** — when the sale completes, the coach's site posts back to
+   `POST /api/conversions` (header `X-Webhook-Secret: <CONVERSION_SECRET>`) with
+   `{ ref, productCode, externalOrderId, customerName?, customerEmail?, pincode? }`.
+   We resolve the referrer, attach the buyer as a node **under them**, and fire
+   the full commission cascade (upline levels + geo overrides + qualification
+   gate). Idempotent on `externalOrderId`, so a retried webhook never double-pays.
+
+## Payouts require coach approval
+
+`request → (coach) approve → (coach) settle → paid`, or `reject`. Requesting
+reserves the affiliate's balance (`requested`) but pays nothing until the coach
+approves and settles; rejecting releases it. See `POST /api/users/:id/payouts`
+and the coach actions `POST /api/payouts/:id/{approve,settle,reject}`.
+
+## Database drivers
+
+The app runs on either driver through one async adapter (`src/adapter.js`):
+
+- **SQLite** (default) — zero setup, great for dev and the test suite.
+- **PostgreSQL** — production. Set `DB_DRIVER=pg` and `DATABASE_URL`.
+
+The schema is generated per-dialect and the full test suite passes on both.
+See `server/.env.example` for all environment variables.
+
 ## Repo layout
 
 ```
-server/   Express + SQLite API and the commission engine
-  src/db.js         schema + the coach's plan (products, level tables, geo, ranks, settings)
+server/   Express API + commission engine (dual-driver: SQLite | Postgres)
+  src/adapter.js    async DB adapter (SQLite + Postgres), placeholder + tx handling
+  src/db.js         dialect-aware schema + the coach's plan (products, tables, settings)
   src/engine.js     recordPurchase / registerAffiliate — the only money paths
-  src/dashboard.js  home-screen aggregate payload
+  src/referral.js   link resolution, click tracking, sale attribution
+  src/dashboard.js  src/links.js  src/wallet.js  src/leaderboard.js   read-models
   src/index.js      HTTP API
-  src/seed.js       demo data (Jessica's team, built through the real engine)
-  test/             engine tests (node --test)
-web/      Vite + React advocate app (mobile home screen)
+  src/seed.js       demo data (Jessica's team), runs on either driver
+  test/             engine / wallet / referral tests (node --test)
+web/      Vite + React advocate app (Home, Links, Wallet, Leaderboard tabs)
 ```
 
 ## Run it
 
 ```bash
-# API (port 4000)
+# --- API on SQLite (default, no setup) ---
 cd server && npm install && node src/seed.js && node src/index.js
 
-# Web app (port 5173, proxies /api to :4000)
+# --- API on Postgres ---
+export DB_DRIVER=pg DATABASE_URL=postgres://user:pass@host:5432/dbname
+node src/seed.js && node src/index.js
+
+# --- Web app (port 5173, proxies /api to :4000) ---
 cd web && npm install && npx vite
 ```
 
-Open http://localhost:5173 — Jessica's dashboard (demo user id 3). Every figure
-(₹7,455 earned, 842 clicks, 14 conversions, Gold rank) is computed by the
-engine from the seeded team, not hardcoded.
+Open http://localhost:5173 — Jessica's four tabs (demo user id 3). Every figure
+is computed by the engine from the seeded team, not hardcoded.
 
 ## Tests
 
 ```bash
-cd server && node --test test/engine.test.js
+cd server && node --test test/*.test.js                              # SQLite
+DB_DRIVER=pg DB_RESET=1 DATABASE_URL=... node --test test/*.test.js  # Postgres
 ```
 
 ## API
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/api/affiliates` | Register affiliate `{name, pincode, sponsorId?}` → records the ₹250 purchase |
-| POST | `/api/purchases` | Package purchase `{buyerId, productCode}` → fires all commissions |
-| POST | `/api/users/:id/clicks` | Track a referral-link click |
-| GET | `/api/users/:id/dashboard` | Home screen payload |
+| GET | `/ref/:code` | Referral redirect → records click, forwards to course page |
+| POST | `/api/conversions` | Sale postback (secured) → attributes sale + fires commissions |
+| POST | `/api/affiliates` | Register affiliate `{name, pincode, sponsorId?}` |
+| POST | `/api/purchases` | Package purchase `{buyerId, productCode}` |
+| GET | `/api/users/:id/dashboard` | Home payload |
+| GET | `/api/users/:id/links` | Links & Creatives payload (share URLs + campaign stats) |
+| POST | `/api/users/:id/links` | Create a campaign link |
+| GET | `/api/users/:id/wallet` | Wallet payload |
+| POST | `/api/users/:id/payouts` | Affiliate requests a payout (awaits approval) |
+| GET | `/api/payouts?status=requested` | Coach: pending payout queue |
+| POST | `/api/payouts/:id/{approve,settle,reject}` | Coach: act on a payout |
+| GET | `/api/leaderboard?me=:id` | Standings + your rank |
 | GET | `/api/users/:id/commissions` | Commission ledger |
 | GET | `/api/products` | Catalogue with 12-level and geo payout tables |
 | GET | `/api/pincodes/:pincode/holders` | Resolve area/taluk/district holders |

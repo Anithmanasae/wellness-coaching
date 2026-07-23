@@ -8,15 +8,18 @@
 //   - Qualification gate: an upline earns a level payout only if they own a
 //     package of equal-or-higher tier than the purchased product. Geographic
 //     overrides are NOT gated (the holder paid for the territory).
+//
+// All database access goes through the async adapter (`db`), which may be a
+// top-level handle or a transaction handle; calling db.tx() nests correctly.
 
-function getSetting(db, key) {
-  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+async function getSetting(db, key) {
+  const row = await db.get('SELECT value FROM settings WHERE key = ?', [key]);
   if (!row) throw new Error(`Missing setting: ${key}`);
   return row.value;
 }
 
-function productByCode(db, code) {
-  const p = db.prepare('SELECT * FROM products WHERE code = ?').get(code);
+async function productByCode(db, code) {
+  const p = await db.get('SELECT * FROM products WHERE code = ?', [code]);
   if (!p) throw new Error(`Unknown product code: ${code}`);
   return p;
 }
@@ -26,40 +29,36 @@ function slugifyName(name) {
 }
 
 // Give a user a unique, human-readable referral code (their share link tail).
-function assignReferralCode(db, userId, name) {
+async function assignReferralCode(db, userId, name) {
   const base = slugifyName(name);
   let code = base;
   let n = 1;
-  while (db.prepare('SELECT 1 FROM users WHERE referral_code = ? AND id != ?').get(code, userId)) {
+  while (await db.get('SELECT 1 FROM users WHERE referral_code = ? AND id != ?', [code, userId])) {
     code = `${base}-${++n}`;
   }
-  db.prepare('UPDATE users SET referral_code = ? WHERE id = ?').run(code, userId);
+  await db.run('UPDATE users SET referral_code = ? WHERE id = ?', [code, userId]);
   return code;
 }
 
 // Insert a user node in the network (no purchase). Used both when an affiliate
 // registers and when a referred customer first appears via a conversion.
-function createUserNode(db, { name, email = null, phone = null, pincode = null, sponsorId = null, joinedAt = null }) {
-  const info = joinedAt
-    ? db.prepare('INSERT INTO users (name, email, phone, pincode, sponsor_id, joined_at) VALUES (?, ?, ?, ?, ?, ?)')
-        .run(name, email, phone, pincode, sponsorId, joinedAt)
-    : db.prepare('INSERT INTO users (name, email, phone, pincode, sponsor_id) VALUES (?, ?, ?, ?, ?)')
-        .run(name, email, phone, pincode, sponsorId);
-  const userId = info.lastInsertRowid;
-  assignReferralCode(db, userId, name);
-  return userId;
+async function createUserNode(db, { name, email = null, phone = null, pincode = null, sponsorId = null, joinedAt = null }) {
+  const row = joinedAt
+    ? await db.get('INSERT INTO users (name, email, phone, pincode, sponsor_id, joined_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING id', [name, email, phone, pincode, sponsorId, joinedAt])
+    : await db.get('INSERT INTO users (name, email, phone, pincode, sponsor_id) VALUES (?, ?, ?, ?, ?) RETURNING id', [name, email, phone, pincode, sponsorId]);
+  await assignReferralCode(db, row.id, name);
+  return row.id;
 }
 
 // Resolve the area/taluk/district holders for a pincode.
 // Returns { area, taluk, district } of userId | null.
-function holdersForPincode(db, pincode) {
-  const geo = db.prepare('SELECT * FROM pincodes WHERE pincode = ?').get(pincode);
-  const holderFor = db.prepare(
-    'SELECT user_id FROM territory_holders WHERE level = ? AND territory = ?'
-  );
-  const area = holderFor.get('area', pincode);
-  const taluk = geo ? holderFor.get('taluk', geo.taluk) : null;
-  const district = geo ? holderFor.get('district', geo.district) : null;
+async function holdersForPincode(db, pincode) {
+  const geo = await db.get('SELECT * FROM pincodes WHERE pincode = ?', [pincode]);
+  const holderFor = (level, territory) =>
+    db.get('SELECT user_id FROM territory_holders WHERE level = ? AND territory = ?', [level, territory]);
+  const area = await holderFor('area', pincode);
+  const taluk = geo ? await holderFor('taluk', geo.taluk) : null;
+  const district = geo ? await holderFor('district', geo.district) : null;
   return {
     area: area ? area.user_id : null,
     taluk: taluk ? taluk.user_id : null,
@@ -67,61 +66,59 @@ function holdersForPincode(db, pincode) {
   };
 }
 
-function insertCommission(db, { userId, kind, level = null, purchaseId, sourceUserId, productId, amount, createdAt }) {
+async function insertCommission(db, { userId, kind, level = null, purchaseId, sourceUserId, productId, amount, createdAt }) {
   if (!amount || amount <= 0) return;
   if (createdAt) {
-    db.prepare(
+    await db.run(
       `INSERT INTO commissions (user_id, kind, level, source_purchase_id, source_user_id, product_id, amount, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(userId, kind, level, purchaseId, sourceUserId, productId, amount, createdAt);
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, kind, level, purchaseId, sourceUserId, productId, amount, createdAt]
+    );
   } else {
-    db.prepare(
+    await db.run(
       `INSERT INTO commissions (user_id, kind, level, source_purchase_id, source_user_id, product_id, amount)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).run(userId, kind, level, purchaseId, sourceUserId, productId, amount);
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [userId, kind, level, purchaseId, sourceUserId, productId, amount]
+    );
   }
 }
 
 // The core money path. Records a purchase and every commission it generates.
 // Returns { purchaseId, paid: [...], forfeited: [...] } for transparency.
-function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, externalOrderId = null, createdAt = null }) {
+async function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, externalOrderId = null, createdAt = null }) {
   // Idempotency: a repeated webhook for the same external order must not pay twice.
   if (externalOrderId) {
-    const existing = db.prepare('SELECT id FROM purchases WHERE external_order_id = ?').get(externalOrderId);
+    const existing = await db.get('SELECT id FROM purchases WHERE external_order_id = ?', [externalOrderId]);
     if (existing) return { purchaseId: existing.id, duplicate: true, paid: [], forfeited: [] };
   }
-  const tx = db.transaction(() => {
-    const buyer = db.prepare('SELECT * FROM users WHERE id = ?').get(buyerId);
+  return db.tx(async (t) => {
+    const buyer = await t.get('SELECT * FROM users WHERE id = ?', [buyerId]);
     if (!buyer) throw new Error(`Unknown buyer ${buyerId}`);
-    const product = productByCode(db, productCode);
-    const gateOn = getSetting(db, 'qualification_gate') === 1;
+    const product = await productByCode(t, productCode);
+    const gateOn = (await getSetting(t, 'qualification_gate')) === 1;
 
-    const purchaseInfo = createdAt
-      ? db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id, external_order_id, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-          .run(buyerId, product.id, product.price, campaignLinkId, externalOrderId, createdAt)
-      : db.prepare('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id, external_order_id) VALUES (?, ?, ?, ?, ?)')
-          .run(buyerId, product.id, product.price, campaignLinkId, externalOrderId);
-    const purchaseId = purchaseInfo.lastInsertRowid;
+    const purchaseRow = createdAt
+      ? await t.get('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id, external_order_id, created_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING id', [buyerId, product.id, product.price, campaignLinkId, externalOrderId, createdAt])
+      : await t.get('INSERT INTO purchases (buyer_id, product_id, amount, campaign_link_id, external_order_id) VALUES (?, ?, ?, ?, ?) RETURNING id', [buyerId, product.id, product.price, campaignLinkId, externalOrderId]);
+    const purchaseId = purchaseRow.id;
 
     const paid = [];
     const forfeited = [];
 
     // 1. 12-level upline payouts.
-    const levelRows = db
-      .prepare('SELECT level, amount FROM commission_levels WHERE product_id = ? ORDER BY level')
-      .all(product.id);
+    const levelRows = await t.all('SELECT level, amount FROM commission_levels WHERE product_id = ? ORDER BY level', [product.id]);
     const payoutByLevel = new Map(levelRows.map((r) => [r.level, r.amount]));
 
     let ancestorId = buyer.sponsor_id;
     for (let level = 1; level <= 12; level++) {
       if (!ancestorId) break; // chain ended — remaining levels forfeited (no compression)
-      const ancestor = db.prepare('SELECT id, sponsor_id, highest_tier_rank FROM users WHERE id = ?').get(ancestorId);
+      const ancestor = await t.get('SELECT id, sponsor_id, highest_tier_rank FROM users WHERE id = ?', [ancestorId]);
       const amount = payoutByLevel.get(level) || 0;
 
       if (amount > 0) {
         const qualified = !gateOn || ancestor.highest_tier_rank >= product.tier_rank;
         if (qualified) {
-          insertCommission(db, {
+          await insertCommission(t, {
             userId: ancestor.id, kind: 'level', level, purchaseId,
             sourceUserId: buyerId, productId: product.id, amount, createdAt,
           });
@@ -134,17 +131,15 @@ function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, exter
     }
 
     // 2. Geographic overrides (not gated).
-    const holders = holdersForPincode(db, buyer.pincode);
-    const geoRows = db
-      .prepare('SELECT level, amount FROM geo_levels WHERE product_id = ?')
-      .all(product.id);
+    const holders = await holdersForPincode(t, buyer.pincode);
+    const geoRows = await t.all('SELECT level, amount FROM geo_levels WHERE product_id = ?', [product.id]);
     const geoByLevel = new Map(geoRows.map((r) => [r.level, r.amount]));
     for (const geoLevel of ['area', 'taluk', 'district']) {
       const holderId = holders[geoLevel];
       const amount = geoByLevel.get(geoLevel) || 0;
       // A holder earns no override on their own purchase.
       if (holderId && holderId !== buyerId && amount > 0) {
-        insertCommission(db, {
+        await insertCommission(t, {
           userId: holderId, kind: `geo_${geoLevel}`, purchaseId,
           sourceUserId: buyerId, productId: product.id, amount, createdAt,
         });
@@ -155,76 +150,70 @@ function recordPurchase(db, { buyerId, productCode, campaignLinkId = null, exter
     // 3. Territory grant: some packages make the buyer the protected holder
     //    of their own pincode (area) or taluk, if it is not already claimed.
     if (product.grants_territory) {
-      const geo = db.prepare('SELECT * FROM pincodes WHERE pincode = ?').get(buyer.pincode);
+      const geo = await t.get('SELECT * FROM pincodes WHERE pincode = ?', [buyer.pincode]);
       const territory = product.grants_territory === 'area'
         ? buyer.pincode
         : geo ? geo.taluk : null;
       if (territory) {
-        db.prepare(
-          `INSERT OR IGNORE INTO territory_holders (level, territory, user_id, granted_by_purchase_id)
-           VALUES (?, ?, ?, ?)`
-        ).run(product.grants_territory, territory, buyerId, purchaseId);
+        await t.run(
+          `INSERT INTO territory_holders (level, territory, user_id, granted_by_purchase_id)
+           VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING`,
+          [product.grants_territory, territory, buyerId, purchaseId]
+        );
       }
     }
 
     // 4. Raise the buyer's qualification tier to this product's tier.
     if (product.tier_rank > buyer.highest_tier_rank) {
-      db.prepare('UPDATE users SET highest_tier_rank = ? WHERE id = ?').run(product.tier_rank, buyerId);
+      await t.run('UPDATE users SET highest_tier_rank = ? WHERE id = ?', [product.tier_rank, buyerId]);
     }
 
     // 5. Refresh the buyer's sponsor's cosmetic rank (their conversion count grew).
-    if (buyer.sponsor_id) refreshRank(db, buyer.sponsor_id);
+    if (buyer.sponsor_id) await refreshRank(t, buyer.sponsor_id);
 
     return { purchaseId, paid, forfeited };
   });
-  return tx();
 }
 
 // Register a new affiliate: create the user record and record their ₹250
 // Registration purchase (which pays their upline + geo holders).
-function registerAffiliate(db, { name, email = null, phone = null, pincode, sponsorId = null, campaignLinkId = null, joinedAt = null }) {
-  const tx = db.transaction(() => {
-    const userId = createUserNode(db, { name, email, phone, pincode, sponsorId, joinedAt });
-    const result = recordPurchase(db, { buyerId: userId, productCode: 'REG', campaignLinkId, createdAt: joinedAt });
+async function registerAffiliate(db, { name, email = null, phone = null, pincode, sponsorId = null, campaignLinkId = null, joinedAt = null }) {
+  return db.tx(async (t) => {
+    const userId = await createUserNode(t, { name, email, phone, pincode, sponsorId, joinedAt });
+    const result = await recordPurchase(t, { buyerId: userId, productCode: 'REG', campaignLinkId, createdAt: joinedAt });
     return { userId, ...result };
   });
-  return tx();
 }
 
-// Conversions an advocate has driven = purchases by their direct recruits
-// (they were the L-1 earner, or would have been if qualified).
-function conversionCount(db, userId) {
-  return db
-    .prepare(
-      `SELECT COUNT(*) AS n FROM purchases p
-       JOIN users u ON u.id = p.buyer_id
-       WHERE u.sponsor_id = ?`
-    )
-    .get(userId).n;
+// Conversions an advocate has driven = purchases by their direct recruits.
+async function conversionCount(db, userId) {
+  const row = await db.get(
+    `SELECT COUNT(*) AS n FROM purchases p
+     JOIN users u ON u.id = p.buyer_id
+     WHERE u.sponsor_id = ?`,
+    [userId]
+  );
+  return Number(row.n);
 }
 
-function rankForConversions(db, count) {
-  return db
-    .prepare('SELECT * FROM ranks WHERE min_conversions <= ? ORDER BY sort_order DESC LIMIT 1')
-    .get(count);
+async function rankForConversions(db, count) {
+  return db.get('SELECT * FROM ranks WHERE min_conversions <= ? ORDER BY sort_order DESC LIMIT 1', [count]);
 }
 
-function nextRank(db, rankName) {
-  const current = db.prepare('SELECT * FROM ranks WHERE name = ?').get(rankName);
+async function nextRank(db, rankName) {
+  const current = await db.get('SELECT * FROM ranks WHERE name = ?', [rankName]);
   if (!current) return null;
-  return db
-    .prepare('SELECT * FROM ranks WHERE sort_order > ? ORDER BY sort_order ASC LIMIT 1')
-    .get(current.sort_order);
+  return db.get('SELECT * FROM ranks WHERE sort_order > ? ORDER BY sort_order ASC LIMIT 1', [current.sort_order]);
 }
 
-function refreshRank(db, userId) {
-  const earned = rankForConversions(db, conversionCount(db, userId));
-  if (earned) db.prepare('UPDATE users SET rank = ? WHERE id = ?').run(earned.name, userId);
+async function refreshRank(db, userId) {
+  const earned = await rankForConversions(db, await conversionCount(db, userId));
+  if (earned) await db.run('UPDATE users SET rank = ? WHERE id = ?', [earned.name, userId]);
 }
 
 // Next payout: the coming payout day this month, or next month if it passed.
-function nextPayoutDate(db, from = new Date()) {
-  const day = getSetting(db, 'payout_day');
+async function nextPayoutDate(db, from = new Date()) {
+  const day = await getSetting(db, 'payout_day');
   const d = new Date(from);
   const candidate = new Date(d.getFullYear(), d.getMonth(), day);
   if (candidate <= d) candidate.setMonth(candidate.getMonth() + 1);

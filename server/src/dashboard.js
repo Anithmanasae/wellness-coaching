@@ -10,26 +10,27 @@ function conversionLabel(row) {
 }
 
 // Everything the home screen needs, in one payload.
-function getDashboard(db, userId, now = new Date()) {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+async function getDashboard(db, userId, now = new Date()) {
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [userId]);
   if (!user) return null;
 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 
-  const totalEarnedThisMonth = db
-    .prepare('SELECT COALESCE(SUM(amount), 0) AS total FROM commissions WHERE user_id = ? AND created_at >= ?')
-    .get(userId, monthStart).total;
+  const totalEarnedThisMonth = (await db.get(
+    'SELECT COALESCE(SUM(amount), 0) AS total FROM commissions WHERE user_id = ? AND created_at >= ?',
+    [userId, monthStart]
+  )).total;
 
-  const lockedAmount = db
-    .prepare(`SELECT COALESCE(SUM(amount), 0) AS total FROM commissions WHERE user_id = ? AND status = 'locked'`)
-    .get(userId).total;
+  const lockedAmount = (await db.get(
+    `SELECT COALESCE(SUM(amount), 0) AS total FROM commissions WHERE user_id = ? AND status = 'locked'`,
+    [userId]
+  )).total;
 
-  const linkClicks = db.prepare('SELECT COUNT(*) AS n FROM link_clicks WHERE user_id = ?').get(userId).n;
+  const linkClicks = Number((await db.get('SELECT COUNT(*) AS n FROM link_clicks WHERE user_id = ?', [userId])).n);
+  const conversions = await conversionCount(db, userId);
 
-  const conversions = conversionCount(db, userId);
-
-  const next = nextRank(db, user.rank);
-  const currentRank = db.prepare('SELECT * FROM ranks WHERE name = ?').get(user.rank);
+  const next = await nextRank(db, user.rank);
+  const currentRank = await db.get('SELECT * FROM ranks WHERE name = ?', [user.rank]);
   let rankProgress = null;
   if (next && currentRank) {
     const span = next.min_conversions - currentRank.min_conversions;
@@ -42,26 +43,25 @@ function getDashboard(db, userId, now = new Date()) {
     };
   }
 
-  const recentConversions = db
-    .prepare(
-      `SELECT c.id, c.kind, c.level, c.amount,
-              b.name AS buyer_name, p.name AS product_name
-       FROM commissions c
-       LEFT JOIN users b ON b.id = c.source_user_id
-       LEFT JOIN products p ON p.id = c.product_id
-       WHERE c.user_id = ?
-       ORDER BY c.created_at DESC, c.id DESC
-       LIMIT 5`
-    )
-    .all(userId)
-    .map((row) => ({
-      id: row.id,
-      name: row.buyer_name || 'Customer',
-      label: conversionLabel(row),
-      amount: row.amount,
-    }));
+  const recentRows = await db.all(
+    `SELECT c.id, c.kind, c.level, c.amount,
+            b.name AS buyer_name, p.name AS product_name
+     FROM commissions c
+     LEFT JOIN users b ON b.id = c.source_user_id
+     LEFT JOIN products p ON p.id = c.product_id
+     WHERE c.user_id = ?
+     ORDER BY c.created_at DESC, c.id DESC
+     LIMIT 5`,
+    [userId]
+  );
+  const recentConversions = recentRows.map((row) => ({
+    id: row.id,
+    name: row.buyer_name || 'Customer',
+    label: conversionLabel(row),
+    amount: row.amount,
+  }));
 
-  const payoutDate = nextPayoutDate(db, now);
+  const payoutDate = await nextPayoutDate(db, now);
 
   return {
     user: { id: user.id, name: user.name, rank: user.rank },
