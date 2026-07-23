@@ -1,0 +1,350 @@
+/* ============================================================
+   Links & Creatives screen
+   All classes are prefixed `lk-` to avoid collisions.
+   Colours come from theme.css custom properties.
+   ============================================================ */
+
+/* ---------- 1. header ---------- */
+
+.lk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lk-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.lk-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  line-height: 0;
+  box-shadow: 0 2px 6px rgba(30, 42, 35, 0.10);
+}
+
+.lk-welcome {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.2px;
+}
+
+.lk-bell {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 4px;
+  margin: -4px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- 2-3. title + subtitle ---------- */
+
+.lk-title {
+  margin-top: 18px;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.lk-subtitle {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--gray);
+}
+
+/* ---------- 4. custom link generator ---------- */
+
+.lk-generator {
+  margin-top: 24px;
+  padding: 24px;
+}
+
+.lk-gen-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lk-gen-chip {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--sage);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lk-gen-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.lk-field-label {
+  margin-top: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray);
+}
+
+.lk-field {
+  position: relative;
+  margin-top: 8px;
+  background: var(--stone);
+  border-radius: 14px;
+  padding: 14px 44px 14px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.lk-field-text {
+  font-size: 15px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.lk-field-lock {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray);
+  display: flex;
+  line-height: 0;
+}
+
+.lk-copy-btn {
+  margin-top: 16px;
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 28px;
+  background: var(--ink);
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(31, 42, 36, 0.24);
+  transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.lk-copy-btn:hover {
+  box-shadow: 0 12px 26px rgba(31, 42, 36, 0.30);
+}
+
+.lk-copy-btn:active {
+  transform: translateY(1px);
+}
+
+.lk-copy-btn.is-copied {
+  background: #2E7D4F;
+  box-shadow: 0 10px 22px rgba(46, 125, 79, 0.28);
+}
+
+/* ---------- 5. section heading ---------- */
+
+.lk-section-heading {
+  margin-top: 30px;
+  margin-bottom: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- 6. campaign cards ---------- */
+
+.lk-campaigns {
+  display: flex;
+  flex-direction: column;
+}
+
+.lk-campaign {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.lk-campaign:last-child {
+  margin-bottom: 0;
+}
+
+.lk-camp-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lk-tag {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.lk-tag-sage {
+  background: var(--sage);
+  color: #3D6B4B;
+}
+
+.lk-tag-gold {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.lk-camp-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.lk-icon-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  color: var(--gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.lk-icon-btn:hover {
+  color: var(--ink);
+  background: var(--stone);
+}
+
+.lk-icon-btn.is-copied {
+  color: #2E7D4F;
+}
+
+.lk-camp-title {
+  margin-top: 14px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.lk-stats {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.lk-tile {
+  background: var(--stone);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lk-tile-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--gray);
+}
+
+.lk-tile-value {
+  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.lk-tile-gold {
+  color: var(--gold);
+}
+
+.lk-camp-bottom {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lk-cluster {
+  display: flex;
+  align-items: center;
+}
+
+.lk-cluster-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--sage);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #FFFFFF;
+  flex-shrink: 0;
+}
+
+.lk-cluster-avatar + .lk-cluster-avatar {
+  margin-left: -10px;
+}
+
+.lk-cluster-badge {
+  margin-left: -10px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--gold-btn);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #FFFFFF;
+  flex-shrink: 0;
+}
+
+.lk-active-days {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--gray);
+  text-align: right;
+}

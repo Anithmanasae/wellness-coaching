@@ -128,13 +128,31 @@ const leaders = [
   ['Nadia Khan', 6, ['P2', 'P2']],
   ['Liam Wong', 5, ['P1', 'P6']],
 ];
+// Real names for team members so anyone who surfaces on the leaderboard
+// (e.g. a team member who bought a territory package and earns geo overrides)
+// reads as a genuine advocate.
+const NAME_POOL = [
+  'Aarav Nair', 'Isha Reddy', 'Kabir Shah', 'Ananya Iyer', 'Rohit Menon',
+  'Sneha Pillai', 'Arjun Rao', 'Diya Kapoor', 'Vikram Bose', 'Neha Gupta',
+  'Karan Malhotra', 'Priya Varma', 'Aditya Singh', 'Riya Desai', 'Sameer Khan',
+  'Tara Joshi', 'Nikhil Chauhan', 'Meera Krishnan', 'Rahul Verma', 'Pooja Hegde',
+  'Daniel Foster', 'Grace Lim', 'Omar Haddad', 'Sofia Reyes', 'Ethan Clarke',
+  'Lena Novak', 'Marco Bianchi', 'Chloe Adams', 'Ibrahim Sy', 'Hana Kim',
+  'Lucas Moreau', 'Amelia Ford', 'Yusuf Demir', 'Zara Ahmed', 'Noah Bennett',
+  'Emma Walsh', 'Raj Patel', 'Fatima Noor', 'Leo Martins', 'Ava Sullivan',
+  'Dev Sharma', 'Kiara Jain', 'Rehan Mirza', 'Anjali Nanda', 'Vivaan Kohli',
+  'Maya Fernandes', 'Aryan Ghosh', 'Simran Kaur', 'Tanvi Rao', 'Krish Anand',
+];
+let namePtr = 0;
+const nextName = () => NAME_POOL[namePtr++ % NAME_POOL.length];
+
 let leadAgo = 100;
 leaders.forEach(([name, recruits, pkgs], li) => {
   const pin = RURAL[li % RURAL.length];
   const leaderId = registerAffiliate(db, { name, pincode: pin, joinedAt: isoDay(leadAgo, '08:00:00') }).userId;
   setTierMax(leaderId);
   for (let i = 0; i < recruits; i++) {
-    const r = registerAffiliate(db, { name: `${name} team ${i + 1}`, pincode: pin, sponsorId: leaderId, joinedAt: isoDay(leadAgo - 1, '09:00:00') }).userId;
+    const r = registerAffiliate(db, { name: nextName(), pincode: pin, sponsorId: leaderId, joinedAt: isoDay(leadAgo - 1, '09:00:00') }).userId;
     if (i < pkgs.length) recordPurchase(db, { buyerId: r, productCode: pkgs[i], createdAt: isoDay(leadAgo - 2, '10:00:00') });
   }
   leadAgo -= 3;

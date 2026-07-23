@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap');
+
+/* ============================================================
+   Shared design tokens + app shell (phone frame + bottom nav)
+   Every screen renders inside .screen-phone and shares these.
+   ============================================================ */
+
+:root {
+  --cream: #F5F3EE;
+  --card: #FFFFFF;
+  --ink: #1F2A24;      /* primary dark green-black text */
+  --gray: #8A8F8B;     /* secondary text */
+  --gray-2: #6E736F;
+  --gold: #D9A62E;     /* money / accent */
+  --gold-soft: #F8EFD4;
+  --gold-btn: #F0C243; /* active nav / bright accent */
+  --sage: #E9F0E7;     /* pale icon chip bg */
+  --stone: #F1EFE9;    /* neutral pill/tile bg */
+  --line: #E7E5DF;
+  --green-deep-a: #253B2F;
+  --green-deep-b: #16221B;
+  --shadow: 0 8px 24px rgba(30, 42, 35, 0.06);
+  --shadow-lg: 0 10px 30px rgba(30, 42, 35, 0.14);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: #E9E7E2;
+  font-family: 'Jost', 'Poppins', 'Century Gothic', 'Futura', sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Full viewport, centers the phone column. */
+.screen-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  background: #E9E7E2;
+}
+
+/* The phone frame — every screen uses this. */
+.screen-phone {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #F8F6F1 0%, #F5F3EE 22%, #F3F1EB 100%);
+  padding: 24px 20px 108px;
+  overflow-x: hidden;
+}
+
+.screen-phone h1, .screen-phone h2, .screen-phone h3,
+.screen-phone p, .screen-phone ul { margin: 0; }
+
+.app-card {
+  background: var(--card);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- shared bottom navigation ---------- */
+
+.nav {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: calc(430px - 32px);
+  height: 64px;
+  background: var(--card);
+  border-radius: 26px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 20;
+}
+
+.nav-slot {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3A423C;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-slot:hover { color: var(--ink); }
+
+.nav-active,
+.nav-active:hover {
+  background: var(--gold-btn);
+  color: var(--ink);
+}

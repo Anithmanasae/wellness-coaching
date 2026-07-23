@@ -1,0 +1,367 @@
+/* ============================================================
+   Leaderboard — "Elite Advocates"
+   Uses shared tokens from theme.css. All classes prefixed .lb-.
+   ============================================================ */
+
+/* ---------- 1. header ---------- */
+
+.lb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lb-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.lb-header-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  line-height: 0;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+}
+
+.lb-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lb-bell {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ---------- 2. podium ---------- */
+
+.lb-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 0 2px;
+}
+
+.lb-podium-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+
+/* The champion sits noticeably higher than the two flanking columns. */
+.lb-podium-col--1 {
+  margin-bottom: 26px;
+}
+
+.lb-star {
+  color: var(--gold);
+  line-height: 0;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 3px 6px rgba(217, 166, 46, 0.4));
+}
+
+.lb-ring {
+  position: relative;
+  border-radius: 50%;
+  background: var(--card);
+  padding: 4px;
+  display: flex;
+}
+
+.lb-ring-avatar {
+  border-radius: 50%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.lb-ring--1 {
+  border: 3px solid var(--gold);
+  box-shadow: 0 12px 28px rgba(217, 166, 46, 0.30), 0 0 0 6px rgba(240, 194, 67, 0.10);
+}
+
+.lb-ring--2 {
+  border: 3px solid #AEB8C4;
+  box-shadow: var(--shadow);
+}
+
+.lb-ring--3 {
+  border: 3px solid #E0A46A;
+  box-shadow: var(--shadow);
+}
+
+.lb-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  color: var(--ink);
+  border: 2.5px solid var(--card);
+  line-height: 1;
+}
+
+.lb-badge--1 {
+  width: 30px;
+  height: 30px;
+  right: 0;
+  bottom: 2px;
+  background: var(--gold-btn);
+  font-size: 15px;
+  box-shadow: 0 4px 10px rgba(240, 194, 67, 0.45);
+}
+
+.lb-badge--2 {
+  width: 24px;
+  height: 24px;
+  right: -1px;
+  bottom: 0;
+  background: #AEB8C4;
+  font-size: 13px;
+}
+
+.lb-badge--3 {
+  width: 24px;
+  height: 24px;
+  right: -1px;
+  bottom: 0;
+  background: #E0A46A;
+  font-size: 13px;
+}
+
+.lb-podium-name {
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+  max-width: 100%;
+}
+
+.lb-podium-earn {
+  margin-top: 3px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1.15;
+}
+
+.lb-podium-col--1 .lb-podium-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.lb-podium-col--1 .lb-podium-earn {
+  font-size: 18px;
+}
+
+/* ---------- 3. column headers ---------- */
+
+.lb-col-headers {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 30px;
+  padding: 0 8px;
+}
+
+.lb-col-head {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gray);
+  line-height: 1.3;
+}
+
+.lb-col-head--rank {
+  max-width: 120px;
+}
+
+.lb-col-head--earn {
+  text-align: right;
+}
+
+/* ---------- 4. rank list ---------- */
+
+.lb-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.lb-row-rank {
+  width: 34px;
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.lb-row-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.lb-row-mid {
+  flex: 1;
+  margin-left: 14px;
+  min-width: 0;
+}
+
+.lb-row-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-row-tier {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.lb-row-earn {
+  margin-left: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ---------- 5. your current rank (hero) ---------- */
+
+.lb-me {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  padding: 20px 22px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, var(--green-deep-a) 0%, var(--green-deep-b) 100%);
+  box-shadow: var(--shadow-lg);
+}
+
+/* soft inner sheen */
+.lb-me::before {
+  content: "";
+  position: absolute;
+  top: -45%;
+  left: -12%;
+  width: 75%;
+  height: 160%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+}
+
+.lb-me-rank {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--gold-btn);
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(240, 194, 67, 0.35);
+}
+
+.lb-me-mid {
+  position: relative;
+  flex: 1;
+  margin-left: 16px;
+  min-width: 0;
+}
+
+.lb-me-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.lb-me-label svg {
+  flex-shrink: 0;
+}
+
+.lb-me-headline {
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.lb-me-right {
+  position: relative;
+  margin-left: 12px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lb-me-earn-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.lb-me-earn {
+  margin-top: 3px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1.15;
+}
+
+/* Highlight the signed-in advocate's own row. */
+.lb-row.lb-row--me {
+  background: var(--gold-soft);
+  box-shadow: 0 0 0 1.6px var(--gold-btn), var(--shadow);
+}
