@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App screens</title>
+<style>
+  :root{
+    --orange:#F4511E; --orange-deep:#D93B0B; --ink:#1B1B1B; --muted:#6E6A6A;
+    --page:#FDF7F7; --card:#FFFFFF; --line:#EFE7E7;
+    --green:#1E7A3C; --green-bright:#2FBF5A;
+    --teal:#2E9E9C; --teal-deep:#1F7F7D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#888;font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .screen{width:390px;background:var(--page);color:var(--ink);position:relative;overflow:hidden;
+          padding-bottom:74px;margin:0 auto 40px}
+  .pad{padding:0 16px}
+
+  /* ---------- shared chrome ---------- */
+  .topbar{display:flex;align-items:center;gap:8px;padding:16px 16px 12px}
+  .topbar .pin{font-size:17px}
+  .addr{flex:1;min-width:0}
+  .addr .lbl{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.01em}
+  .addr .val{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .addr .big{font-size:17px;font-weight:800;color:var(--orange)}
+  .bell{position:relative;font-size:16px}
+  .bell::after{content:"";position:absolute;top:-1px;right:-1px;width:7px;height:7px;border-radius:50%;
+               background:#E5342A;border:1.5px solid var(--page)}
+
+  .search{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;
+          padding:13px 14px;margin:0 16px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:13.5px;color:#9A9494}
+  .search.grey{background:#F2ECEC;box-shadow:none}
+  .mic{margin-left:auto;font-size:14px}
+
+  /* categories */
+  .cats{display:flex;gap:16px;padding:0 16px 18px;overflow:hidden}
+  .cat{width:72px;flex:0 0 auto;text-align:center}
+  .cat .disc{width:66px;height:66px;border-radius:50%;background:#F0E9E9;margin-bottom:8px;
+             display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden}
+  .cat .nm{font-size:11.5px;font-weight:700;line-height:1.25}
+
+  /* bottom nav */
+  .nav{position:absolute;bottom:0;left:0;right:0;height:74px;background:#fff;border-top:1px solid var(--line);
+       display:flex;align-items:center;justify-content:space-around;padding-bottom:6px}
+  .nav a{text-align:center;font-size:10.5px;font-weight:700;color:#8A8484;text-decoration:none;
+         display:flex;flex-direction:column;align-items:center;gap:5px;width:60px}
+  .nav .ico{font-size:19px;line-height:1}
+  .nav .on{color:#fff}
+  .nav .on .ico{background:var(--orange);color:#fff;border-radius:22px;padding:9px 16px}
+  .nav .on .lb{color:var(--ink)}
+  .nav.greenA .on .ico{background:var(--green)}
+  .nav.tealA .on .ico{background:var(--teal)}
+  .badge{position:relative}
+  .badge::after{content:"2";position:absolute;top:-5px;right:-8px;background:#E5342A;color:#fff;
+                font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;
+                display:grid;place-items:center}
+
+  /* photo stand-ins */
+  .ph{background-size:cover;background-position:center;position:relative}
+  .ph-burger{background:linear-gradient(150deg,#F6D9A8 0%,#D9A05B 32%,#8B4A22 62%,#5A2C13 100%)}
+  .ph-pasta{background:linear-gradient(150deg,#FBF3E2 0%,#EBCF92 40%,#C99A4E 72%,#7C5A2E 100%)}
+  .ph-bowl{background:linear-gradient(150deg,#EAF6E4 0%,#A8D48B 34%,#5AA05A 66%,#2F6B3C 100%)}
+  .ph-tom{background:linear-gradient(150deg,#FDEDEA 0%,#F0A79A 40%,#D2452F 100%)}
+  .ph-milk{background:linear-gradient(150deg,#FFFFFF 0%,#E4EEF8 45%,#9DB9D6 100%)}
+  .ph-ban{background:linear-gradient(150deg,#FAF7DC 0%,#DCD86A 40%,#8CA43C 100%)}
+  .ph-bread{background:linear-gradient(150deg,#F6E7CE 0%,#D2A76A 45%,#8E5B2B 100%)}
+  .ph-pill{background:linear-gradient(150deg,#FAFCFD 0%,#DCE7EC 50%,#AEC3CC 100%)}
+  .ph-vit{background:linear-gradient(150deg,#F7EEDE 0%,#D9B274 50%,#96682C 100%)}
+  .ph-store{background:linear-gradient(150deg,#EFF6E9 0%,#BCD9A2 35%,#6F9E5C 70%,#3C5F35 100%)}
+  .ph-kit{background:linear-gradient(150deg,#DCF0EF 0%,#9FD2D0 45%,#4E9E9C 100%)}
+  .glyph{position:absolute;inset:0;display:grid;place-items:center;font-size:44px;opacity:.9;
+         filter:drop-shadow(0 2px 6px rgba(0,0,0,.28))}
+
+  /* ---------- 1 & 5 : food / home ---------- */
+  .chips{display:flex;gap:11px;padding:0 16px 18px;overflow:hidden}
+  .chip{flex:0 0 auto;border:1px solid #EBB9A6;border-radius:22px;padding:11px 17px;background:#fff;
+        font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .rule{height:1px;background:var(--line);margin-bottom:16px}
+
+  .promo{display:flex;align-items:center;gap:13px;background:#FBE0D5;border-radius:14px;
+         padding:15px 16px;margin:0 16px 22px}
+  .promo .t{flex:1}
+  .promo .t b{display:block;font-size:14px}
+  .promo .t span{font-size:12px;color:#7A6A64}
+  .promo .go{font-size:11.5px;font-weight:800;color:var(--orange);letter-spacing:.03em}
+
+  .rcard{background:var(--card);border-radius:16px;margin:0 16px 20px;overflow:hidden;
+         box-shadow:0 2px 10px rgba(0,0,0,.07)}
+  .rcard .hero{height:228px}
+  .tag{position:absolute;top:13px;left:13px;background:var(--orange);color:#fff;font-size:11px;
+       font-weight:800;padding:6px 11px;border-radius:7px;letter-spacing:.02em}
+  .heart{position:absolute;top:13px;right:13px;width:36px;height:36px;border-radius:50%;
+         background:rgba(255,255,255,.92);display:grid;place-items:center;font-size:16px}
+  .eta{position:absolute;right:13px;bottom:13px;background:#fff;border-radius:16px;padding:6px 12px;
+       font-size:11.5px;font-weight:700;display:flex;gap:5px;align-items:center}
+  .rbody{padding:15px 16px 18px}
+  .rrow{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .rname{font-size:19px;font-weight:800;flex:1}
+  .rate{background:#F3EDED;border-radius:7px;padding:4px 9px;font-size:12px;font-weight:800;
+        display:flex;gap:4px;align-items:center}
+  .rate i{color:var(--orange);font-style:normal}
+  .rmeta{font-size:13px;color:var(--muted)}
+
+  /* home hero */
+  .hero-food{background:linear-gradient(180deg,#FFF6F2 0%,#FDEDE6 100%);border-radius:16px;
+             margin:0 16px 14px;padding:20px 16px 18px;text-align:center;position:relative;overflow:hidden}
+  .hero-food h2{font-size:18px;font-weight:800}
+  .hero-food p{font-size:12.5px;color:var(--muted);margin:3px 0 13px}
+  .btn-o{display:inline-block;background:var(--orange-deep);color:#fff;font-size:13px;font-weight:800;
+         padding:11px 22px;border-radius:22px}
+  .duo{display:flex;gap:12px;padding:0 16px 16px}
+  .dcard{flex:1;border-radius:14px;padding:13px;position:relative;overflow:hidden;min-height:104px}
+  .dcard.g{background:#E8F5E3;border:1px solid #D3EBCB}
+  .dcard.t{background:#E4F1F4;border:1px solid #CDE5EA}
+  .fast{display:flex;gap:6px;align-items:center;margin-bottom:9px}
+  .fast b{background:#1E7A3C;color:#fff;font-size:8.5px;font-weight:800;padding:3px 7px;border-radius:5px}
+  .dcard.t .fast b{background:var(--teal-deep)}
+  .fast span{font-size:9.5px;font-weight:800;color:#2C2C2C}
+  .dcard h3{font-size:15px;font-weight:800;line-height:1.15}
+  .dcard p{font-size:10.5px;color:var(--muted);margin-top:3px;max-width:62%}
+  .dcard .thumb{position:absolute;right:9px;bottom:9px;width:44px;height:34px;border-radius:6px}
+
+  .wide{display:flex;gap:12px;padding:0 16px 24px;overflow:hidden}
+  .wcard{flex:0 0 300px;border-radius:16px;padding:18px;position:relative;overflow:hidden;color:#fff}
+  .wcard.o{background:linear-gradient(115deg,#F4632C 0%,#E0410F 100%)}
+  .wcard.g{background:linear-gradient(115deg,#2FA34F 0%,#17762F 100%)}
+  .kicker{display:inline-block;background:rgba(255,255,255,.24);font-size:9px;font-weight:800;
+          padding:4px 9px;border-radius:5px;letter-spacing:.06em;margin-bottom:9px}
+  .wcard h3{font-size:26px;font-weight:800;line-height:1}
+  .wcard p{font-size:12.5px;opacity:.95;margin:6px 0 14px;max-width:60%}
+  .btn-w{display:inline-block;background:#fff;color:#C6390D;font-size:12.5px;font-weight:800;
+         padding:9px 18px;border-radius:20px}
+  .wcard.g .btn-w{color:#17762F}
+  .wcard .deco{position:absolute;right:-6px;bottom:-10px;font-size:96px;opacity:.18}
+
+  .sechead{display:flex;align-items:baseline;padding:0 16px 14px}
+  .sechead h2{font-size:19px;font-weight:800;flex:1}
+  .sechead a{font-size:12.5px;font-weight:700;color:var(--orange);text-decoration:none}
+  .sechead.greenL a{color:var(--green)}
+  .sechead.tealL a{color:var(--teal)}
+
+  .lcard{background:#fff;border-radius:16px;margin:0 16px 18px;overflow:hidden;
+         box-shadow:0 2px 10px rgba(0,0,0,.07)}
+  .lcard .hero{height:186px}
+  .star{position:absolute;top:12px;left:12px;background:#fff;border-radius:8px;padding:5px 10px;
+        font-size:11.5px;font-weight:800;display:flex;gap:4px;align-items:center}
+  .lbody{padding:14px 15px 16px}
+  .lbody .nm{font-size:16.5px;font-weight:800;flex:1}
+  .pills{display:flex;gap:8px;margin:9px 0 11px}
+  .pill{background:#F3EDED;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;
+        display:flex;gap:5px;align-items:center}
+  .pill.g{background:#E7F4E4;color:#1E7A3C}
+  .offer{display:flex;align-items:center;gap:10px}
+  .offer .txt{flex:1;font-size:12px;color:var(--orange);font-weight:700}
+  .offer .txt.g{color:#3B7A2C}
+  .ghost{border:1px solid var(--line);border-radius:20px;padding:8px 15px;font-size:12px;font-weight:800}
+
+  /* ---------- 2 : grocery ---------- */
+  .g .search{background:#F2ECEC;box-shadow:none}
+  .h2{font-size:21px;font-weight:800;padding:0 16px 14px}
+  .banners{display:flex;gap:12px;padding:0 16px 24px;overflow:hidden}
+  .bnr{flex:0 0 300px;border-radius:16px;padding:18px;position:relative;overflow:hidden;min-height:150px}
+  .bnr.green{background:#8AE79A}
+  .bnr.cream{background:#FDEBD2}
+  .bnr h3{font-size:21px;font-weight:800;color:#0F5B23}
+  .bnr.cream h3{color:#D2500F}
+  .bnr p{font-size:13px;font-weight:600;color:#1B6B31;margin:4px 0 14px}
+  .bnr.cream p{color:#B4610F}
+  .btn-dark{display:inline-block;background:#0F4A20;color:#fff;font-size:12.5px;font-weight:800;
+            padding:9px 17px;border-radius:18px}
+  .bnr .shot{position:absolute;right:12px;top:34px;width:120px;height:82px;border-radius:8px;
+             background:#fff;border:1px solid rgba(0,0,0,.08);overflow:hidden}
+  .bnr .shot .strip{height:26px;background:linear-gradient(90deg,#8FCB6A,#D8E9A6)}
+  .bnr .shot .ln{height:5px;background:#E9E9E9;margin:7px 8px;border-radius:3px}
+  .bnr .shot .ln.s{width:52%}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 16px 22px}
+  .pcard{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .pcard .im{height:150px;background:#F4F4F4;position:relative;display:grid;place-items:center}
+  .ten{position:absolute;top:9px;left:9px;background:#E7F4E4;color:#1E7A3C;font-size:10px;font-weight:800;
+       border-radius:14px;padding:4px 9px;display:flex;gap:4px;align-items:center;z-index:2}
+  .swatch{width:78%;height:74%;border-radius:8px;position:relative}
+  .pbody{padding:11px 12px 13px}
+  .pbody .nm{font-size:13.5px;font-weight:700;line-height:1.3;min-height:36px}
+  .pbody .qty{font-size:11.5px;color:var(--muted);margin:5px 0 9px}
+  .prow{display:flex;align-items:center;gap:8px}
+  .prow .pr{font-size:14px;font-weight:800}
+  .prow .was{font-size:11.5px;color:#A49E9E;text-decoration:line-through}
+  .add{margin-left:auto;border:1.4px solid var(--green);color:var(--green);border-radius:8px;
+       padding:6px 15px;font-size:11.5px;font-weight:800}
+
+  /* ---------- 3 : pharmacy ---------- */
+  .t .cat .disc{background:#EEE9E9}
+  .t .cat.on .disc{background:var(--teal)}
+  .hbnr{margin:0 16px 22px;border-radius:16px;padding:20px;min-height:196px;position:relative;
+        overflow:hidden;background:linear-gradient(145deg,#BFDFDE 0%,#8FC6C5 100%)}
+  .flat{display:inline-block;background:#1F7F7D;color:#fff;font-size:11px;font-weight:800;
+        padding:6px 11px;border-radius:7px;letter-spacing:.02em}
+  .hbnr h3{font-size:27px;font-weight:800;color:#12514F;line-height:1.05;margin:14px 0 16px;max-width:55%}
+  .btn-teal{display:inline-block;background:#1F7F7D;color:#fff;font-size:13px;font-weight:800;
+            padding:10px 20px;border-radius:20px}
+  .hbnr .kit{position:absolute;right:14px;top:44px;width:132px;height:110px;border-radius:12px}
+
+  /* ---------- 4 : cart ---------- */
+  .cart-h{font-size:26px;font-weight:800;padding:6px 16px 20px}
+  .grp{display:flex;align-items:center;gap:11px;padding:0 16px 13px}
+  .grp .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:16px}
+  .grp .dot.o{background:#FBE0D5}
+  .grp .dot.g{background:#2C9E4B;color:#fff}
+  .grp .dot.t{background:#CFE6E6}
+  .grp h3{font-size:18px;font-weight:800}
+  .item{display:flex;align-items:center;gap:13px;background:#fff;border-radius:14px;margin:0 16px 14px;
+        padding:13px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .item .im{width:74px;height:74px;border-radius:10px;flex:0 0 auto}
+  .item .info{flex:1;min-width:0}
+  .item .from{font-size:11.5px;color:var(--muted);font-weight:700;margin-bottom:2px}
+  .item .nm{font-size:15px;font-weight:800;line-height:1.25}
+  .item .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .item .pr{font-size:14.5px;font-weight:800;color:var(--orange);margin-top:5px}
+  .item .pr.k{color:var(--ink)}
+  .step{display:flex;align-items:center;gap:13px;border:1.3px solid #EBB9A6;border-radius:9px;
+        padding:7px 11px;font-size:13.5px;font-weight:800}
+  .step.g{border-color:#BCE0BF}
+  .step.t{border-color:#BFDCDC}
+  .step .mn{color:var(--orange)} .step .pl{color:var(--orange)}
+  .step.g .mn,.step.g .pl{color:var(--green)}
+  .step.t .mn,.step.t .pl{color:var(--teal)}
+  .bill{background:#fff;border-radius:14px;margin:6px 16px 0;padding:17px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .bill h3{font-size:19px;font-weight:800;margin-bottom:14px}
+  .brow{display:flex;font-size:14px;margin-bottom:11px}
+  .brow span:first-child{flex:1;color:#4A4646}
+  .brow span:last-child{font-weight:700}
+  .paybar{position:absolute;left:0;right:0;bottom:74px;padding:12px 16px;background:var(--page)}
+  .pay{background:var(--orange);color:#fff;border-radius:12px;padding:17px;text-align:center;
+       font-size:15.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:10px}
+</style>
+</head>
+<body>
+
+<!-- ============ 1. HOME ============ -->
+<section class="screen" id="s1">
+  <div class="topbar">
+    <span class="pin">📍</span>
+    <div class="addr"><div class="val big">Delivery Address ⌄</div><div class="lbl" style="font-weight:600">123 Main Street, Apt 4...</div></div>
+    <span class="bell">🔔</span>
+    <span style="width:30px;height:30px;border-radius:50%;background:linear-gradient(140deg,#E9C9A8,#B07C4F);margin-left:10px"></span>
+  </div>
+  <div class="search">🔍 <span>Search food, fresh groceries, or me</span><span class="mic">🎙️</span></div>
+
+  <div class="hero-food">
+    <h2>Food Delivery</h2><p>Cravings to your door</p>
+    <span class="btn-o">Order Now</span>
+  </div>
+
+  <div class="duo">
+    <div class="dcard g">
+      <div class="fast"><b>FAST</b><span>⚡ 10 Min</span></div>
+      <h3>Insta<br>Grocery</h3><p>Fresh essentials delivered</p>
+      <span class="thumb ph ph-store"></span>
+    </div>
+    <div class="dcard t">
+      <div class="fast"><b>FAST</b><span>⚡ 10 Min</span></div>
+      <h3>Pharmacy</h3><p>Essentials delivered</p>
+      <span class="thumb ph ph-kit"></span>
+    </div>
+  </div>
+
+  <div class="wide">
+    <div class="wcard o">
+      <span class="kicker">WEEKEND SPECIAL</span>
+      <h3>50% OFF</h3><p>On top restaurants near you</p>
+      <span class="btn-w">Claim Code</span>
+      <span class="deco">🍕</span>
+    </div>
+    <div class="wcard g">
+      <span class="kicker">FRESH</span>
+      <h3>Groceries</h3><p>Fresh picks today</p>
+      <span class="btn-w">Shop Now</span>
+      <span class="deco">🥬</span>
+    </div>
+  </div>
+
+  <div class="sechead"><h2>Top Rated Near You</h2><a href="#">See All</a></div>
+
+  <div class="lcard">
+    <div class="hero ph ph-burger"><span class="glyph">🍔</span><span class="star">⭐ 4.8</span></div>
+    <div class="lbody">
+      <div class="rrow"><span class="nm">The Burger House</span><span>🤍</span></div>
+      <div class="rmeta">American • Fast Food • Burgers</div>
+      <div class="pills"><span class="pill">🕐 15-20 min</span><span class="pill">💳 $$</span></div>
+      <div class="offer"><span class="txt">🏷️ 20% off up to $5</span><span class="ghost">View Menu</span></div>
+    </div>
+  </div>
+
+  <div class="lcard">
+    <div class="hero ph ph-store"><span class="glyph">🛒</span><span class="star">⭐ 4.6</span>
+      <span class="tag" style="top:auto;bottom:13px;left:13px">PROMOTED</span></div>
+    <div class="lbody">
+      <div class="rrow"><span class="nm">FreshMart</span><span>🤍</span></div>
+      <div class="rmeta">Grocery • Daily Essentials • Fresh Produce</div>
+      <div class="pills"><span class="pill g">⚡ 10 min</span></div>
+      <div class="offer"><span class="txt g">Free delivery on first order</span><span class="ghost">Shop Now</span></div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a class="on"><span class="ico">🏠</span><span class="lb">Home</span></a>
+    <a><span class="ico">🍴</span><span>Food</span></a>
+    <a><span class="ico">🛍️</span><span>Grocery</span></a>
+    <a><span class="ico">💊</span><span>Pharmacy</span></a>
+    <a><span class="ico badge">🛒</span><span>Cart</span></a>
+  </nav>
+</section>
+
+<!-- ============ 2. FOOD ============ -->
+<section class="screen" id="s2">
+  <div class="topbar">
+    <span class="pin" style="color:var(--orange)">📍</span>
+    <div class="addr" style="text-align:center"><div class="val big">Delivery Address</div></div>
+    <span class="bell" style="color:var(--orange)">🔔</span>
+  </div>
+  <div class="search">🔍 <span>Search for restaurant or dish</span></div>
+
+  <div class="cats">
+    <div class="cat"><div class="disc" style="background:#EFE9E9"><span style="background:#CFC9C9;color:#6E6A6A;font-size:11px;padding:9px 12px;border-radius:4px">img</span></div><div class="nm">Pizza</div></div>
+    <div class="cat"><div class="disc" style="background:#FBEFE8">🍔</div><div class="nm">Burgers</div></div>
+    <div class="cat"><div class="disc" style="background:#FBEFE8">🥘</div><div class="nm">Indian</div></div>
+    <div class="cat"><div class="disc" style="background:#FBEFE8">🥡</div><div class="nm">Chinese</div></div>
+    <div class="cat"><div class="disc" style="background:#FBEFE8">🍣</div><div class="nm">Sushi</div></div>
+  </div>
+
+  <div class="chips">
+    <span class="chip">⚙️ Sort by</span>
+    <span class="chip">Fast Delivery</span>
+    <span class="chip">Great Offers</span>
+  </div>
+  <div class="rule"></div>
+
+  <div class="promo">
+    <span style="font-size:22px;color:var(--orange)">🚚</span>
+    <div class="t"><b>Free Delivery</b><span>on orders above $15</span></div>
+    <span class="go">EXPLORE</span>
+  </div>
+
+  <div class="rcard">
+    <div class="hero ph ph-burger"><span class="glyph">🍔</span>
+      <span class="tag">50% OFF</span><span class="heart">🤍</span><span class="eta">🕐 20-30 min</span></div>
+    <div class="rbody">
+      <div class="rrow"><span class="rname">The Burger House</span><span class="rate">4.5 <i>★</i></span></div>
+      <div class="rmeta">Burgers, American • $$</div>
+    </div>
+  </div>
+
+  <div class="rcard">
+    <div class="hero ph ph-pasta"><span class="glyph">🍝</span>
+      <span class="heart">🤍</span><span class="eta">🕐 35-45 min</span></div>
+    <div class="rbody">
+      <div class="rrow"><span class="rname">Pasta Palace</span><span class="rate">4.8 <i>★</i></span></div>
+      <div class="rmeta">Italian, Pasta • $$$</div>
+    </div>
+  </div>
+
+  <div class="rcard">
+    <div class="hero ph ph-bowl"><span class="glyph">🥗</span>
+      <span class="tag">PROMOTED</span><span class="heart">🤍</span><span class="eta">🕐 15-25 min</span></div>
+    <div class="rbody">
+      <div class="rrow"><span class="rname">Green Bowl Oasis</span><span class="rate">4.2 <i>★</i></span></div>
+      <div class="rmeta">Healthy, Salads • $$</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a><span class="ico">🏠</span><span>Home</span></a>
+    <a class="on"><span class="ico">🍴</span><span class="lb">Food</span></a>
+    <a><span class="ico">🛍️</span><span>Grocery</span></a>
+    <a><span class="ico">💊</span><span>Pharmacy</span></a>
+    <a><span class="ico">🛒</span><span>Cart</span></a>
+  </nav>
+</section>
+
+<!-- ============ 3. GROCERY ============ -->
+<section class="screen g" id="s3">
+  <div class="topbar">
+    <span class="pin">📍</span>
+    <div class="addr"><div class="lbl">Delivery Address ⌄</div><div class="val">Home - 123 Main St...</div></div>
+    <span class="bell">🔔</span>
+  </div>
+  <div class="search grey">🔍 <span>Search for milk, eggs, or fresh vegetable</span></div>
+
+  <div class="h2">Categories</div>
+  <div class="cats">
+    <div class="cat"><div class="disc ph ph-tom">🍅</div><div class="nm">Fresh<br>Vegetables</div></div>
+    <div class="cat"><div class="disc ph ph-milk">🥛</div><div class="nm">Dairy &amp;<br>Eggs</div></div>
+    <div class="cat"><div class="disc ph ph-bread">🌾</div><div class="nm">Atta, Rice<br>&amp; Dal</div></div>
+    <div class="cat"><div class="disc" style="background:#E4EEF2">🧴</div><div class="nm">Cleaning<br>Essentials</div></div>
+    <div class="cat"><div class="disc" style="background:#F2E9E4">🍪</div><div class="nm">Snacks</div></div>
+  </div>
+
+  <div class="banners">
+    <div class="bnr green">
+      <h3>Fresh Vegetables</h3><p>Flat 25% OFF</p>
+      <span class="btn-dark">Shop Now</span>
+      <div class="shot"><div class="strip"></div><div class="ln"></div><div class="ln s"></div><div class="ln"></div></div>
+    </div>
+    <div class="bnr cream">
+      <h3>Lightning</h3><p>Delivered fast</p>
+      <span class="btn-dark" style="background:var(--orange)">Explore</span>
+    </div>
+  </div>
+
+  <div class="sechead greenL"><h2>Fresh Groceries</h2><a href="#">See All</a></div>
+
+  <div class="grid">
+    <div class="pcard">
+      <div class="im"><span class="ten">🕐 10 min</span><span class="swatch ph ph-tom"><span class="glyph" style="font-size:34px">🍅</span></span></div>
+      <div class="pbody"><div class="nm">Organic Cherry Tomatoes</div><div class="qty">250g</div>
+        <div class="prow"><span class="pr">$3.99</span><span class="was">$4.50</span><span class="add">ADD</span></div></div>
+    </div>
+    <div class="pcard">
+      <div class="im"><span class="ten">🕐 10 min</span><span class="swatch ph ph-milk"><span class="glyph" style="font-size:34px">🥛</span></span></div>
+      <div class="pbody"><div class="nm">Farm Fresh Whole Milk</div><div class="qty">1L</div>
+        <div class="prow"><span class="pr">$2.49</span><span class="add">ADD</span></div></div>
+    </div>
+    <div class="pcard">
+      <div class="im"><span class="ten">🕐 10 min</span><span class="swatch ph ph-ban"><span class="glyph" style="font-size:34px">🍌</span></span></div>
+      <div class="pbody"><div class="nm">Robusta Bananas</div><div class="qty">500g</div>
+        <div class="prow"><span class="pr">$1.20</span><span class="add">ADD</span></div></div>
+    </div>
+    <div class="pcard">
+      <div class="im"><span class="swatch ph ph-bread"><span class="glyph" style="font-size:34px">🍞</span></span></div>
+      <div class="pbody"><div class="nm">Artisan Sourdough Loaf</div><div class="qty">1 pc (approx 400g)</div>
+        <div class="prow"><span class="pr">$5.50</span><span class="add">ADD</span></div></div>
+    </div>
+  </div>
+
+  <nav class="nav greenA">
+    <a><span class="ico">🏠</span><span>Home</span></a>
+    <a><span class="ico">🍴</span><span>Food</span></a>
+    <a class="on"><span class="ico">🛍️</span><span class="lb">Grocery</span></a>
+    <a><span class="ico">💊</span><span>Pharmacy</span></a>
+    <a><span class="ico badge">🛒</span><span>Cart</span></a>
+  </nav>
+</section>
+
+<!-- ============ 4. PHARMACY ============ -->
+<section class="screen t" id="s4">
+  <div class="topbar">
+    <span class="pin">📍</span>
+    <div class="addr"><div class="lbl">Home ⌄</div><div class="val">123 Health Ave, Ap...</div></div>
+    <span class="bell">🧺</span>
+  </div>
+  <div class="search grey">🔍 <span>Search medicines or health products</span>
+    <span class="mic" style="background:var(--teal);color:#fff;padding:6px 8px;border-radius:7px">🎙️</span></div>
+
+  <div class="cats">
+    <div class="cat on"><div class="disc" style="background:var(--teal)"></div><div class="nm">Medicines</div></div>
+    <div class="cat"><div class="disc" style="background:#EEE9E9;color:#5C4A4A">🤍</div><div class="nm">Wellness</div></div>
+    <div class="cat"><div class="disc" style="background:#EEE9E9">🌿</div><div class="nm">Personal Care</div></div>
+    <div class="cat"><div class="disc" style="background:#EEE9E9">👶</div><div class="nm">Baby Care</div></div>
+  </div>
+
+  <div class="hbnr">
+    <span class="flat">FLAT 15% OFF</span>
+    <h3>Health Essentials</h3>
+    <span class="btn-teal">Shop Now</span>
+    <span class="kit ph ph-kit"><span class="glyph">🧰</span></span>
+  </div>
+
+  <div class="sechead tealL"><h2>Recommended for you</h2><a href="#">See All</a></div>
+
+  <div class="grid">
+    <div class="pcard">
+      <div class="im"><span class="ten" style="background:#DCEDEE;color:#1F7F7D">🕐 10 min</span>
+        <span class="swatch ph ph-pill"><span class="glyph" style="font-size:34px">💊</span></span></div>
+      <div class="pbody"><div class="nm">Paracetamol 500mg Tablets</div><div class="qty">15 Tablets</div>
+        <div class="prow"><span class="pr">$2.10</span><span class="add" style="border-color:var(--teal);color:var(--teal)">ADD</span></div></div>
+    </div>
+    <div class="pcard">
+      <div class="im"><span class="ten" style="background:#DCEDEE;color:#1F7F7D">🕐 10 min</span>
+        <span class="swatch ph ph-vit"><span class="glyph" style="font-size:34px">🍯</span></span></div>
+      <div class="pbody"><div class="nm">Daily Multivitamins</div><div class="qty">60 Gummies</div>
+        <div class="prow"><span class="pr">$14.00</span><span class="add" style="border-color:var(--teal);color:var(--teal)">ADD</span></div></div>
+    </div>
+  </div>
+
+  <nav class="nav tealA">
+    <a><span class="ico">🏠</span><span>Home</span></a>
+    <a><span class="ico">🍴</span><span>Food</span></a>
+    <a><span class="ico">🛒</span><span>Grocery</span></a>
+    <a class="on"><span class="ico">💊</span><span class="lb">Pharmacy</span></a>
+    <a><span class="ico">🛍️</span><span>Cart</span></a>
+  </nav>
+</section>
+
+<!-- ============ 5. CART ============ -->
+<section class="screen" id="s5">
+  <div class="topbar">
+    <span class="pin">📍</span>
+    <div class="addr"><div class="lbl">Delivery Address ⌄</div><div class="val">Home - 123 Main St...</div></div>
+    <span class="bell">🔔</span>
+  </div>
+  <div class="cart-h">Your Cart</div>
+
+  <div class="grp"><span class="dot o">🍴</span><h3>Food Delivery</h3></div>
+  <div class="item">
+    <span class="im ph ph-burger"></span>
+    <div class="info"><div class="from">The Burger House</div><div class="nm">Classic Cheeseburger</div>
+      <div class="pr">$12.99</div></div>
+    <div class="step"><span class="mn">−</span>2<span class="pl">+</span></div>
+  </div>
+
+  <div class="grp"><span class="dot g">🛍️</span><h3>Insta Grocery</h3></div>
+  <div class="item">
+    <span class="im ph ph-tom"></span>
+    <div class="info"><div class="nm">Organic Cherry...</div><div class="sub">250g</div>
+      <div class="pr k">$4.50</div></div>
+    <div class="step g"><span class="mn">−</span>1<span class="pl">+</span></div>
+  </div>
+  <div class="item">
+    <span class="im ph ph-milk"></span>
+    <div class="info"><div class="nm">Farm Fresh Whole Milk</div><div class="sub">1 Litre</div>
+      <div class="pr k">$3.20</div></div>
+    <div class="step g"><span class="mn">−</span>1<span class="pl">+</span></div>
+  </div>
+
+  <div class="grp"><span class="dot t">💊</span><h3>Pharmacy &amp; Meds</h3></div>
+  <div class="item">
+    <span class="im ph ph-pill"></span>
+    <div class="info"><div class="nm">Paracetamol 500mg</div><div class="sub">Pack of 20</div>
+      <div class="pr k">$5.00</div></div>
+    <div class="step t"><span class="mn">−</span>1<span class="pl">+</span></div>
+  </div>
+
+  <div class="bill">
+    <h3>Bill Summary</h3>
+    <div class="brow"><span>Item Total</span><span>$38.68</span></div>
+    <div class="brow"><span>Delivery Fee</span><span>$4.50</span></div>
+    <div class="brow"><span>Taxes &amp; Charges</span><span>$3.10</span></div>
+    <div class="brow" style="border-top:1px solid var(--line);padding-top:12px;font-weight:800">
+      <span style="font-weight:800;color:var(--ink)">To Pay</span><span>$46.28</span></div>
+  </div>
+  <div style="height:96px"></div>
+
+  <div class="paybar"><div class="pay">Proceed to Pay - $46.28 <span>→</span></div></div>
+
+  <nav class="nav">
+    <a><span class="ico">🏠</span><span>Home</span></a>
+    <a><span class="ico">🍴</span><span>Food</span></a>
+    <a><span class="ico">🛍️</span><span>Grocery</span></a>
+    <a><span class="ico">💊</span><span>Pharmacy</span></a>
+    <a class="on"><span class="ico badge">🛒</span><span class="lb">Cart</span></a>
+  </nav>
+</section>
+
+</body>
+</html>
