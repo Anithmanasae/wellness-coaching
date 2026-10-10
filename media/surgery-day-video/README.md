@@ -14,3 +14,15 @@ python3 render.py vo/ out/            # add --preview to save stills only
 ```
 
 Edit the narration and on-screen text in `script.py`. The voice and speed are set in `narrate.py`.
+
+## Realistic (live-action) version
+
+`shots.md` is a shot list of 19 prompts for a realistic text-to-video tool (for example Gemini/Veo,
+Sora, Runway or Kling). Save the clips as `clips/<scene>_<n>.mp4`, then run:
+
+```bash
+python3 assemble.py vo/ clips/ out/   # -> out/surgery-day-realistic.mp4
+```
+
+Each scene's clips are fitted to its narration. The same voiceover, subtitles, step cards and music
+are layered on top. Any scene without clips falls back to the illustrated version.

@@ -793,16 +793,20 @@ def title_frame(t, dur, end=False):
     return frame
 
 
-def scene_frame(sid, scene, t, dur):
-    static, dynamic, focus = SCENE_ART[sid]
-    im = static_for(sid).copy()
-    dynamic(Canvas(im), t, dur)
-    z = 1.0 + 0.045 * (t / dur)
-    cw, ch = W * S / z, H * S / z
-    fx, fy = focus[0] * S, focus[1] * S
-    x0 = min(max(fx - cw * (fx / (W * S)), 0), W * S - cw)
-    y0 = min(max(fy - ch * (fy / (H * S)), 0), H * S - ch)
-    frame = im.resize((W, H), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch), reducing_gap=2.0).convert("RGBA")
+def scene_frame(sid, scene, t, dur, bg=None):
+    if bg is not None:
+        frame = bg.convert("RGBA")
+    else:
+        static, dynamic, focus = SCENE_ART[sid]
+        im = static_for(sid).copy()
+        dynamic(Canvas(im), t, dur)
+        z = 1.0 + 0.045 * (t / dur)
+        cw, ch = W * S / z, H * S / z
+        fx, fy = focus[0] * S, focus[1] * S
+        x0 = min(max(fx - cw * (fx / (W * S)), 0), W * S - cw)
+        y0 = min(max(fy - ch * (fy / (H * S)), 0), H * S - ch)
+        frame = im.resize((W, H), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch), reducing_gap=2.0)
+        frame = frame.convert("RGBA")
     card, layers = overlay_for(scene)
     ca = ease((t - 0.2) / 0.6)
     frame.alpha_composite(with_alpha(card, ca))
@@ -816,7 +820,8 @@ def scene_frame(sid, scene, t, dur):
     return frame
 
 
-def render_frame(n):
+def render_frame(n, bg=None):
+    """bg: optional 1920x1080 RGB footage frame used instead of the illustration."""
     t = n / FPS
     for sid, start, dur, scene in TIMELINE:
         if start <= t < start + dur or sid == "end":
@@ -825,7 +830,7 @@ def render_frame(n):
     if sid in ("title", "end"):
         frame = title_frame(lt, dur, end=(sid == "end"))
     else:
-        frame = scene_frame(sid, scene, lt, dur)
+        frame = scene_frame(sid, scene, lt, dur, bg)
     for s0, s1, text in SUBS:
         if s0 - 0.1 <= t < s1 + 0.15:
             a = min(ease((t - s0 + 0.1) / 0.15), ease((s1 + 0.15 - t) / 0.15))
