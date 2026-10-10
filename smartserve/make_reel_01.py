@@ -68,11 +68,11 @@ def bowl(img, cx, cy, r, t):
 
 def scene1(img, t):  # hook
     bowl(img, W / 2, 1100, 300, t)
-    text_c(img, "Customer ne app pe", 380, 84, scale=pop(t, 0.0))
-    text_c(img, "₹500 diye", 520, 160, YEL, scale=pop(t, 0.2))
-    text_c(img, "Restaurant ko kitna mila?", 1600, 70, WHITE, scale=pop(t, 1.5), box=(200, 30, 30))
+    text_c(img, "Customer paid", 380, 84, scale=pop(t, 0.0))
+    text_c(img, "₹500 on the app", 520, 120, YEL, scale=pop(t, 0.2))
+    text_c(img, "How much did the restaurant get?", 1600, 58, WHITE, scale=pop(t, 1.5), box=(200, 30, 30))
 
-DEDUCT = [("Commission (25%)", 125), ("GST on commission", 23), ("Discount aapne diya", 50), ("Ads / visibility", 25)]
+DEDUCT = [("Commission (25%)", 125), ("GST on commission", 23), ("Discount you funded", 50), ("Ads / visibility", 25)]
 def scene2(img, t):  # app deductions
     text_c(img, "Order: ₹500", 320, 90, scale=pop(t, 0.0))
     left = 500.0
@@ -82,12 +82,12 @@ def scene2(img, t):  # app deductions
             a = ease((t - st) / 0.3)
             text_c(img, f"− ₹{v}   {n}", 500 + i * 120, 60, RED, alpha=a)
             left -= v * ease((t - st) / 0.5)
-    text_c(img, "Bank mein aaya:", 1120, 64, GREY, w="Bold")
+    text_c(img, "Hits your bank:", 1120, 64, GREY, w="Bold")
     text_c(img, f"₹{left:.0f}", 1290, 190, GRN if left > 300 else YEL)
 
 COSTS2 = [("Food cost (30%)", 150), ("Packaging", 20)]
 def scene3(img, t):  # own costs
-    text_c(img, "Ab apna kharcha…", 320, 84, scale=pop(t, 0.0))
+    text_c(img, "Now your own costs…", 320, 84, scale=pop(t, 0.0))
     left = 277.0
     for i, (n, v) in enumerate(COSTS2):
         st = 0.6 + i * 0.9
@@ -96,14 +96,14 @@ def scene3(img, t):  # own costs
             text_c(img, f"− ₹{v}   {n}", 520 + i * 120, 62, RED, alpha=a)
             left -= v * ease((t - st) / 0.5)
     text_c(img, f"₹{left:.0f}", 1050, 230, RED if left < 120 else YEL)
-    text_c(img, "bacha… aur abhi", 1260, 64, WHITE, w="Bold", scale=pop(t, 2.6))
-    text_c(img, "rent, staff, gas, bijli\nsab baaki hai", 1450, 70, YEL, scale=pop(t, 3.0))
+    text_c(img, "left… and you still owe", 1260, 64, WHITE, w="Bold", scale=pop(t, 2.6))
+    text_c(img, "rent, staff, gas\nand electricity", 1450, 70, YEL, scale=pop(t, 3.0))
 
 def scene4(img, t):  # reveal
-    text_c(img, "₹500 ka order", 600, 90, scale=pop(t, 0.0))
+    text_c(img, "A ₹500 order", 600, 90, scale=pop(t, 0.0))
     text_c(img, "= ₹107", 790, 200, RED, scale=pop(t, 0.4))
-    text_c(img, "Zyada orders ≠ zyada profit", 1100, 66, WHITE, w="Bold", scale=pop(t, 1.4))
-    text_c(img, "Problem: aapko pata hi nahi\nkaunsa order loss mein hai", 1420, 62, YEL, scale=pop(t, 2.6), box=(0, 0, 0))
+    text_c(img, "More orders ≠ more profit", 1100, 66, WHITE, w="Bold", scale=pop(t, 1.4))
+    text_c(img, "Problem: you don't know\nwhich orders lose money", 1420, 62, YEL, scale=pop(t, 2.6), box=(0, 0, 0))
 
 def phone(img, t):
     d = ImageDraw.Draw(img)
@@ -112,7 +112,7 @@ def phone(img, t):
     d.rounded_rectangle([px0 + 40, py0 + 50, px1 - 40, py0 + 150], 24, fill=ORANGE)
     f = font(46, "Black"); fm = font(34, "SemiBold"); fs = font(30, "Medium")
     d.text((px0 + 70, py0 + 72), "Smart Serve", font=f, fill=WHITE)
-    d.text((px0 + 50, py0 + 185), "Real profit per order · aaj", font=fs, fill=(120, 120, 130))
+    d.text((px0 + 50, py0 + 185), "Real profit per order · today", font=fs, fill=(120, 120, 130))
     rows = [("Dine-in", "₹212", GRN), ("Takeaway", "₹188", GRN), ("Swiggy", "₹96", YEL), ("Zomato (offer)", "₹41", RED)]
     for i, (n, m, c) in enumerate(rows):
         st = 0.3 + i * 0.35
@@ -125,8 +125,8 @@ def phone(img, t):
         d.text((px1 - 70 - bw, y + 36), m, font=f, fill=c)
 
 def scene5(img, t):  # CTA
-    text_c(img, "Har order ka REAL profit", 250, 70, scale=pop(t, 0.0))
-    text_c(img, "ek screen pe.", 350, 76, YEL, scale=pop(t, 0.2))
+    text_c(img, "See the REAL profit", 250, 70, scale=pop(t, 0.0))
+    text_c(img, "on every order.", 350, 76, YEL, scale=pop(t, 0.2))
     phone(img, t)
     if t > 2.4:
         s = pop(t, 2.4)
