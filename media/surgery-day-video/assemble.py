@@ -37,8 +37,20 @@ def fit_scene(clips, dur, path):
             zin = i % 2 == 0
             zoom = f"1+0.08*on/{n}" if zin else f"1.08-0.08*on/{n}"
             inputs += ["-loop", "1", "-i", c]
-            filters.append(f"[{i}:v]scale={W * 2}:{H * 2}:force_original_aspect_ratio=increase,crop={W * 2}:{H * 2},"
-                           f"zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={n}:s={W}x{H}:fps={FPS},"
+            iw, ih = Image.open(c).size
+            if iw / ih < 1.5:
+                # Square/portrait: show the whole photo on the right (clear of the text card)
+                # over a blurred, zoomed copy of itself.
+                fh = H * 2
+                fw = int(iw * fh / ih) // 2 * 2
+                filters.append(f"[{i}:v]split[b{i}][f{i}];"
+                               f"[b{i}]scale={W * 2}:{H * 2}:force_original_aspect_ratio=increase,crop={W * 2}:{H * 2},"
+                               f"boxblur=40:2,eq=brightness=-0.04[bb{i}];[f{i}]scale={fw}:{fh}[ff{i}];"
+                               f"[bb{i}][ff{i}]overlay=x={W * 2 - fw - 160}:y=0[c{i}]")
+            else:
+                filters.append(f"[{i}:v]scale={W * 2}:{H * 2}:force_original_aspect_ratio=increase,"
+                               f"crop={W * 2}:{H * 2}[c{i}]")
+            filters.append(f"[c{i}]zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={n}:s={W}x{H}:fps={FPS},"
                            f"setsar=1,trim=duration={share:.4f},setpts=PTS-STARTPTS[v{i}]")
             continue
         stretch = max(1.0, share / clip_len(c))
