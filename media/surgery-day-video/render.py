@@ -697,6 +697,7 @@ def progress_img(step):
 
 LEAD, GAP, TAIL = 1.4, 0.75, 2.2
 TITLE_DUR, END_DUR = 5.0, 5.0
+CARD_HOLD = 7.0  # seconds the step card stays over real footage
 FADE = 0.45
 
 
@@ -809,14 +810,18 @@ def scene_frame(sid, scene, t, dur, bg=None):
         frame = frame.convert("RGBA")
     card, layers = overlay_for(scene)
     ca = ease((t - 0.2) / 0.6)
+    pa = ca
+    if bg is not None:
+        # Over real footage, get the card out of the way once it has been read.
+        ca *= 1 - ease((t - CARD_HOLD) / 0.8)
     frame.alpha_composite(with_alpha(card, ca))
     for i, (lay, lx, ly) in enumerate(layers):
-        a = ease((t - (0.4 + i * (0.35 if i < 2 else 1.4))) / 0.5)
+        a = ca * ease((t - (0.4 + i * (0.35 if i < 2 else 1.4))) / 0.5)
         if a > 0:
             frame.alpha_composite(with_alpha(lay, a), (lx - int((1 - a) * 24), ly))
     step = scene["badge"].startswith("STEP") and int(scene["badge"].split()[1])
     if step:
-        frame.alpha_composite(with_alpha(progress_img(step), ca), (W - 420, 56))
+        frame.alpha_composite(with_alpha(progress_img(step), pa), (W - 420, 56))
     return frame
 
 
