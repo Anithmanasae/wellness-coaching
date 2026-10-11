@@ -23,11 +23,24 @@ def clip_len(path):
     return float(out)
 
 
+IMAGE_EXT = (".jpg", ".jpeg", ".png", ".webp")
+
+
 def fit_scene(clips, dur, path):
-    """Concatenate clips into exactly `dur` seconds of 1920x1080 @ FPS footage."""
+    """Concatenate clips into exactly `dur` seconds of 1920x1080 @ FPS footage.
+    Still images get a slow zoom so they read as video."""
     share = dur / len(clips)
     inputs, filters = [], []
     for i, c in enumerate(clips):
+        if c.lower().endswith(IMAGE_EXT):
+            n = int(share * FPS) + 1
+            zin = i % 2 == 0
+            zoom = f"1+0.08*on/{n}" if zin else f"1.08-0.08*on/{n}"
+            inputs += ["-loop", "1", "-i", c]
+            filters.append(f"[{i}:v]scale={W * 2}:{H * 2}:force_original_aspect_ratio=increase,crop={W * 2}:{H * 2},"
+                           f"zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={n}:s={W}x{H}:fps={FPS},"
+                           f"setsar=1,trim=duration={share:.4f},setpts=PTS-STARTPTS[v{i}]")
+            continue
         stretch = max(1.0, share / clip_len(c))
         inputs += ["-i", c]
         filters.append(f"[{i}:v]setpts={stretch:.4f}*(PTS-STARTPTS),fps={FPS},"
@@ -47,7 +60,8 @@ def main():
 
     footage = {}
     for sid, start, dur, scene in tl:
-        clips = sorted(glob.glob(os.path.join(clips_dir, f"{sid}_*.mp4")))
+        clips = sorted(p for p in glob.glob(os.path.join(clips_dir, f"{sid}_*"))
+                       if p.lower().endswith((".mp4", ".mov") + IMAGE_EXT))
         if scene and clips:
             path = os.path.join(out, f"bg_{sid}.mp4")
             print(f"{sid}: fitting {len(clips)} clip(s) to {dur:.1f}s")
