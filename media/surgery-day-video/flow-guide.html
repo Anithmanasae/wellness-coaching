@@ -67,11 +67,18 @@ ul.check { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
 @media (prefers-reduced-motion: no-preference) { button.copy { transition: background .15s; } }
 </style>
 
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap">
+<style>
+.say .ta { font-family: "Noto Sans Tamil", "Latha", "Nirmala UI", sans-serif; font-size: 18px; line-height: 1.7; display: block; }
+.say .en { color: var(--muted); font-size: 14.5px; display: block; margin-top: 4px; }
+.say .who { font-weight: 700; display: block; font-size: 14px; color: var(--accent); margin-bottom: 2px; }
+</style>
+
 <div class="wrap">
   <header>
-    <div class="eyebrow">Patient video · Orthopaedic ward</div>
+    <div class="eyebrow">District General Hospital Kilinochchi · Orthopaedic Surgery Ward 16</div>
     <h1>What to Expect on Surgery Day</h1>
-    <p class="lede">Shot list for Google Flow (Veo). There are 14 clips of 8 seconds each, and together they make a video of about 2 minutes. Vikash plays the doctor. Make each clip, save it with the file name shown, then send all the clips back to be joined, with subtitles and titles added.</p>
+    <p class="lede">Shot list for Google Flow (Veo), in Sri Lankan Tamil. There are 15 clips of 8 seconds each, about 2 minutes in total. Vikash plays the doctor, and every speaker talks in Sri Lankan Tamil. Make each clip, save it with the file name shown, then send all the clips back to be joined. The hospital name, ward title and Tamil/English subtitles are added afterwards.</p>
   </header>
 
   <section>
@@ -86,12 +93,16 @@ ul.check { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
       <li>For clips marked <b>Vikash</b>, choose <b>Ingredients to Video</b> and upload Photo A or Photo B. For all other clips, choose <b>Text to Video</b>.</li>
       <li>Set the video to <b>landscape 16:9</b> with <b>sound on</b>.</li>
       <li>Tap <b>Copy prompt</b> below, paste it into Flow and generate.</li>
-      <li>Download the clip and rename it to the file name shown, for example <span class="file">clip01.mp4</span>.</li>
+      <li>Download the clip and rename it to the file name shown, for example <span class="file">clip00.mp4</span>.</li>
     </ol>
+    <div class="note">
+      <p><b>About the Tamil speech:</b> Veo's Tamil can sound slightly unnatural, and lips may not match perfectly. If a line sounds wrong, mispronounced or cut off, generate it again. The Tamil lines were written by AI, so ask a Tamil-speaking colleague to read them before the video is shown to patients.</p>
+      <p><b>About signs:</b> AI video can't write the hospital name correctly on buildings or signs. The prompts ask for no readable text, and the name "District General Hospital Kilinochchi · Orthopaedic Surgery Ward 16" is added as a clean title afterwards.</p>
+    </div>
   </section>
 
   <section>
-    <h2>The 14 clips</h2>
+    <h2>The 15 clips</h2>
     <div class="clips" id="clips"></div>
   </section>
 
@@ -100,7 +111,7 @@ ul.check { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
     <div class="note">
       <ul class="check">
         <li>Vikash's face looks like him.</li>
-        <li>He says the line exactly as written, with nothing cut off or added. If not, generate it again.</li>
+        <li>The Tamil line is said fully and clearly, with nothing cut off or added.</li>
         <li>No garbled signs or writing in the background.</li>
         <li>No needles going into skin, and nothing frightening for patients.</li>
         <li>Gloves, wristbands and monitors look right.</li>
@@ -110,64 +121,101 @@ ul.check { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
 
   <section>
     <h2>When you're done</h2>
-    <p class="lede">Send all 14 files (<span class="file">clip01.mp4</span> to <span class="file">clip14.mp4</span>) back in one message. They will be joined in order, with subtitles, an opening title and an end card added.</p>
+    <p class="lede">Send all 15 files (<span class="file">clip00.mp4</span> to <span class="file">clip14.mp4</span>) back in one message. They will be joined in order, with the hospital title, Tamil and English subtitles, and an end card added.</p>
   </section>
 </div>
 
 <script>
-const STYLE = "Soft natural light, no music, no on-screen text.";
+const LANG = "in Sri Lankan Tamil (Jaffna Tamil accent), speaking slowly and clearly";
+const END = "Soft natural light, quiet hospital ambience, no music, no readable text or signs anywhere.";
+const PT = "a Sri Lankan Tamil woman in her 50s wearing a light-blue patterned hospital gown";
 const CLIPS = [
-  { n: 1, who: "A", say: "Welcome to the ward. Feeling a bit nervous before surgery is completely normal.",
-    p: `Photorealistic video, 16:9. The doctor in this image stands in a bright, clean Sri Lankan hospital corridor, looking at the camera with a warm smile and open hand gestures. He says in a calm, friendly Sri Lankan English accent: "Welcome to the ward. Feeling a bit nervous before surgery is completely normal." Gentle slow push-in, quiet hospital ambience. ${STYLE}` },
-  { n: 2, who: "A", say: "Let's walk through what your surgery day will look like, from start to finish.",
-    p: `Photorealistic video, 16:9. Medium close-up of the doctor in this image in a bright hospital ward, speaking warmly to the camera, then smiling and nodding. He says in a calm Sri Lankan English accent: "Let's walk through what your surgery day will look like, from start to finish." Shallow depth of field, quiet ambience. ${STYLE}` },
-  { n: 3, say: "Your day begins right here in the ward. Our nurses will help you change into a clean gown.",
-    p: `Photorealistic video, 16:9. In a bright Sri Lankan hospital ward, a friendly nurse in a blue uniform helps a Sri Lankan woman in her 50s change into a light-blue patterned hospital gown behind a privacy curtain; the patient smiles, relaxed. A calm male voiceover in a Sri Lankan English accent says: "Your day begins right here in the ward. Our nurses will help you change into a clean gown." Slow camera move. ${STYLE}` },
-  { n: 4, say: "Please remove jewellery, hairpins, dentures and glasses, and we'll check your identification band.",
-    p: `Photorealistic video, 16:9. Close-up: the patient places her glasses, a watch, a ring and a small denture cup into a clear property bag on a bedside table, then a nurse's gloved hands check the white ID wristband on her wrist. Calm male voiceover in a Sri Lankan English accent: "Please remove jewellery, hairpins, dentures and glasses, and we'll check your identification band." Shallow depth of field. ${STYLE}` },
-  { n: 5, say: "When it's time, our staff will wheel you comfortably to the operating theatre. You won't be alone.",
-    p: `Photorealistic video, 16:9. Two hospital porters in teal scrubs gently wheel the patient, lying calmly on a trolley under a white blanket, down a bright clean hospital corridor towards the operating theatre doors. Tracking shot beside the trolley. Calm male voiceover in a Sri Lankan English accent: "When it's time, our staff will wheel you comfortably to the operating theatre. You won't be alone." ${STYLE}` },
-  { n: 6, who: "B", say: "Hello, I'm your anaesthetist. We'll just double-check your details to make sure everything is correct.",
-    p: `Photorealistic video, 16:9. At the operating theatre doors, the doctor in this image, wearing green scrubs and a blue scrub cap with his mask lowered, greets the patient on the trolley with a warm smile and checks her wristband against a clipboard. He says kindly in a Sri Lankan English accent: "Hello, I'm your anaesthetist. We'll just double-check your details to make sure everything is correct." Soft clinical light, no music, no on-screen text.` },
-  { n: 7, say: "We'll attach monitoring stickers, a blood pressure cuff, and a small clip on your finger.",
-    p: `Photorealistic video, 16:9. In a clean anaesthesia room, a nurse gently places monitoring stickers on the patient's upper chest over her gown, wraps a blood pressure cuff around her arm and clips a pulse oximeter on her finger; a monitor shows a steady green heartbeat line. Calm male voiceover in a Sri Lankan English accent: "We'll attach monitoring stickers, a blood pressure cuff, and a small clip on your finger." No needles. ${STYLE}` },
-  { n: 8, who: "B", say: "I'll place a small IV line in your hand, and soon you'll drift into a safe, deep sleep.",
-    p: `Photorealistic video, 16:9. The doctor in this image, in green scrubs and a blue scrub cap, leans over the patient lying on a theatre trolley, gently resting a hand on her shoulder and speaking reassuringly. He says softly in a Sri Lankan English accent: "I'll place a small IV line in your hand, and soon you'll drift into a safe, deep sleep." She smiles and slowly closes her eyes. Lighting softens. No needles shown, no music, no on-screen text.` },
-  { n: 9, say: "When surgery is finished, you'll wake up in the recovery room. You may feel a little sleepy.",
-    p: `Photorealistic video, 16:9. In a quiet recovery room with soft warm light, the Sri Lankan patient lies in bed under a blanket and slowly opens her eyes, a little sleepy but comfortable; monitors glow softly behind her. Calm male voiceover in a Sri Lankan English accent: "When surgery is finished, you'll wake up in the recovery room. You may feel a little sleepy." No music, no on-screen text.` },
-  { n: 10, say: "Our recovery nurses stay by your side, keeping you warm and making sure your pain is well managed.",
-    p: `Photorealistic video, 16:9. A kind recovery nurse in a blue uniform smiles and tucks a warm blanket around the resting patient, then checks the vital-signs monitor. Calm male voiceover in a Sri Lankan English accent: "Our recovery nurses stay by your side, keeping you warm and making sure your pain is well managed." Soft warm lighting, slow camera move, no music, no on-screen text.` },
-  { n: 11, say: "Once you're awake and stable, you'll return to your bed in the orthopaedic ward to rest.",
-    p: `Photorealistic video, 16:9. The patient is wheeled back into a bright, sunny orthopaedic ward with palm trees outside the windows; she sits up in bed, smiling, while her son sits beside her holding her hand. Calm male voiceover in a Sri Lankan English accent: "Once you're awake and stable, you'll return to your bed in the orthopaedic ward to rest." ${STYLE}` },
-  { n: 12, say: "Sip water when permitted, and remember, we are always just a call bell away.",
-    p: `Photorealistic video, 16:9. The patient sips water through a straw, then rests her hand next to a nurse call-bell handset with a red button clipped to the bed rail; close-up as her thumb rests on the button. Calm male voiceover in a Sri Lankan English accent: "Sip water when permitted, and remember, we are always just a call bell away." Bright soft light, no music, no on-screen text.` },
-  { n: 13, who: "A", say: "Any questions about your procedure? Just ask your doctor or nurse. We're here for you.",
-    p: `Photorealistic video, 16:9. The doctor in this image stands at a bright nurses' station with three smiling Sri Lankan nurses in blue uniforms. He speaks warmly to the camera in a Sri Lankan English accent: "Any questions about your procedure? Just ask your doctor or nurse. We're here for you." Then they all smile and wave. ${STYLE}` },
-  { n: 14, who: "A", say: "Wishing you a very smooth recovery.",
-    p: `Photorealistic video, 16:9. Close-up of the doctor in this image in a sunny hospital ward, smiling warmly at the camera. He says gently in a Sri Lankan English accent: "Wishing you a very smooth recovery." He gives a small nod and smile. Slow pull-back. ${STYLE}` },
+  { n: 0, speaker: "Voiceover (calm male voice)",
+    ta: "கிளிநொச்சி மாவட்ட பொது வைத்தியசாலை, எலும்பியல் சத்திரசிகிச்சை விடுதி 16க்கு உங்களை அன்புடன் வரவேற்கிறோம்.",
+    en: "Welcome to District General Hospital Kilinochchi, Orthopaedic Surgery Ward 16.",
+    scene: `Photorealistic video, 16:9. Slow aerial establishing shot of a large, clean, modern government district hospital in Kilinochchi, northern Sri Lanka, in morning sunshine, surrounded by palm trees and red earth; the camera glides down to the entrance, then cuts inside to a bright, tidy orthopaedic surgical ward with neat beds, nurses in blue uniforms and large windows. A calm male voiceover` },
+  { n: 1, who: "A", speaker: "Vikash (doctor)",
+    ta: "வணக்கம்! சத்திரசிகிச்சைக்கு முன் கொஞ்சம் பயமாக இருப்பது முற்றிலும் சாதாரணம்தான்.",
+    en: "Hello! Feeling a little nervous before surgery is completely normal.",
+    scene: `Photorealistic video, 16:9. The doctor in this image stands in a bright, clean Sri Lankan hospital ward corridor, looking at the camera with a warm smile and open hand gestures. Gentle slow push-in. He says` },
+  { n: 2, who: "A", speaker: "Vikash (doctor)",
+    ta: "உங்கள் சத்திரசிகிச்சை நாள் தொடக்கம் முதல் முடிவு வரை எப்படி இருக்கும் என்று பார்ப்போம்.",
+    en: "Let's see what your surgery day will look like, from start to finish.",
+    scene: `Photorealistic video, 16:9. Medium close-up of the doctor in this image in a bright hospital ward, speaking warmly to the camera, then smiling and nodding. Shallow depth of field. He says` },
+  { n: 3, speaker: "Nurse",
+    ta: "உங்கள் நாள் இங்கே விடுதியில்தான் தொடங்குகிறது. இந்த சுத்தமான உடையை மாற்றிக்கொள்ளுங்கள்.",
+    en: "Your day begins right here in the ward. Please change into this clean gown.",
+    scene: `Photorealistic video, 16:9. In a bright Sri Lankan hospital ward, a friendly Tamil nurse in a blue uniform hands a folded light-blue patterned hospital gown to ${PT.replace(" wearing a light-blue patterned hospital gown", "")} sitting on her bed beside a privacy curtain, and smiles at her. The nurse says` },
+  { n: 4, speaker: "Nurse",
+    ta: "நகைகள், பொய்ப்பல், கண்ணாடியைக் கழற்றி வையுங்கள். உங்கள் அடையாளப் பட்டியைச் சரிபார்க்கிறேன்.",
+    en: "Please take off your jewellery, dentures and glasses. I'll check your identification band.",
+    scene: `Photorealistic video, 16:9. Close-up: ${PT} places her glasses, a watch and a ring into a clear property bag on a bedside table, while the nurse, wearing gloves, gently holds her wrist and checks the white ID wristband. The nurse says` },
+  { n: 5, speaker: "Porter",
+    ta: "நேரம் வந்ததும் உங்களைச் சத்திரசிகிச்சைக் கூடத்துக்குக் கவனமாகக் கொண்டு செல்வோம். பயப்பட வேண்டாம்.",
+    en: "When it's time, we'll take you carefully to the operating theatre. Don't worry.",
+    scene: `Photorealistic video, 16:9. A friendly Tamil hospital porter in teal scrubs gently pushes a trolley with ${PT}, lying calmly under a white blanket, down a bright clean hospital corridor towards the operating theatre doors; he looks down at her kindly. Tracking shot beside the trolley. The porter says` },
+  { n: 6, who: "B", speaker: "Vikash (anaesthetist)",
+    ta: "வணக்கம், நான் உங்கள் மயக்க மருந்து வைத்தியர். உங்கள் விவரங்களை ஒருமுறை சரிபார்க்கிறோம்.",
+    en: "Hello, I'm your anaesthetist. We'll just check your details once more.",
+    scene: `Photorealistic video, 16:9. At the operating theatre doors, the doctor in this image, wearing green scrubs and a blue scrub cap with his mask lowered, greets the patient on the trolley with a warm smile and checks her wristband against a clipboard. Soft clinical light. He says` },
+  { n: 7, speaker: "Theatre nurse",
+    ta: "நெஞ்சில் ஸ்டிக்கர்கள், கையில் இரத்த அழுத்தப் பட்டி, விரலில் ஒரு சிறிய கிளிப் போடுகிறோம்.",
+    en: "We'll put stickers on your chest, a blood pressure cuff on your arm and a small clip on your finger.",
+    scene: `Photorealistic video, 16:9. In a clean anaesthesia room, a Tamil theatre nurse in a blue scrub cap gently places monitoring stickers on the patient's upper chest over her gown, wraps a blood pressure cuff around her arm and clips a pulse oximeter on her finger; a monitor shows a steady green heartbeat line. No needles. The nurse says` },
+  { n: 8, who: "B", speaker: "Vikash (anaesthetist)",
+    ta: "கையில் ஒரு சிறிய கனுலா போடுவேன். கொஞ்ச நேரத்தில் நீங்கள் பாதுகாப்பாக நன்றாகத் தூங்கிவிடுவீர்கள்.",
+    en: "I'll put a small cannula in your hand. In a little while you'll fall into a safe, deep sleep.",
+    scene: `Photorealistic video, 16:9. The doctor in this image, in green scrubs and a blue scrub cap, leans over the patient lying on a theatre trolley, gently resting a hand on her shoulder and speaking reassuringly; she smiles and slowly closes her eyes as the lighting softens. No needles shown. He says softly` },
+  { n: 9, speaker: "Recovery nurse",
+    ta: "சத்திரசிகிச்சை முடிந்துவிட்டது. நீங்கள் இப்போது மீட்பு அறையில் இருக்கிறீர்கள். கொஞ்சம் தூக்கக் கலக்கமாக இருக்கலாம்.",
+    en: "Your surgery is finished. You're in the recovery room now. You may feel a little drowsy.",
+    scene: `Photorealistic video, 16:9. In a quiet recovery room with soft warm light, ${PT} lies in bed under a blanket and slowly opens her eyes, sleepy but comfortable; a kind Tamil nurse in a blue uniform leans in, smiling. The nurse says gently` },
+  { n: 10, speaker: "Recovery nurse",
+    ta: "நான் உங்கள் பக்கத்திலேயே இருப்பேன். குளிராமல் பார்த்துக்கொள்வோம். வலி இருந்தால் சொல்லுங்கள்.",
+    en: "I'll be right beside you. We'll keep you warm. Tell us if you have any pain.",
+    scene: `Photorealistic video, 16:9. The kind recovery nurse smiles and tucks a warm blanket around the resting patient, then glances at the vital-signs monitor. Soft warm lighting, slow camera move. The nurse says` },
+  { n: 11, speaker: "Son (family visitor)",
+    ta: "அம்மா, நீங்கள் மீண்டும் விடுதிக்கு வந்துவிட்டீர்கள். இப்போது நன்றாக ஓய்வெடுங்கள்.",
+    en: "Amma, you're back on the ward. Rest well now.",
+    scene: `Photorealistic video, 16:9. In a bright, sunny orthopaedic ward with palm trees outside the windows, ${PT} sits up in bed, smiling; her young adult son sits beside her, holding her hand. The son says warmly` },
+  { n: 12, speaker: "Ward nurse",
+    ta: "அனுமதித்த பின் தண்ணீர் குடிக்கலாம். ஏதாவது தேவையென்றால் இந்த அழைப்பு மணியை அழுத்துங்கள்.",
+    en: "You can drink water once we allow it. If you need anything, press this call bell.",
+    scene: `Photorealistic video, 16:9. A Tamil ward nurse in a blue uniform hands the patient a cup of water with a straw, then points to a nurse call-bell handset with a red button clipped to the bed rail; close-up as the patient's hand rests beside it. The nurse says` },
+  { n: 13, who: "A", speaker: "Vikash (doctor)",
+    ta: "சத்திரசிகிச்சை பற்றி ஏதாவது சந்தேகமா? உங்கள் வைத்தியரிடமோ தாதியிடமோ தயங்காமல் கேளுங்கள்.",
+    en: "Any questions about your surgery? Don't hesitate to ask your doctor or nurse.",
+    scene: `Photorealistic video, 16:9. The doctor in this image stands at a bright nurses' station with three smiling Tamil nurses in blue uniforms, then they all smile and wave at the camera. He speaks warmly to the camera and says` },
+  { n: 14, who: "A", speaker: "Vikash (doctor)",
+    ta: "நீங்கள் விரைவில் குணமடைய வாழ்த்துகிறோம்!",
+    en: "We wish you a speedy recovery!",
+    scene: `Photorealistic video, 16:9. Close-up of the doctor in this image in a sunny hospital ward, smiling warmly at the camera, then giving a small nod. Slow pull-back. He says gently` },
 ];
 const PHOTO = { A: "Vikash · Photo A (white coat)", B: "Vikash · Photo B (theatre scrubs)" };
 const list = document.getElementById("clips");
 for (const c of CLIPS) {
   const id = String(c.n).padStart(2, "0");
+  const prompt = `${c.scene} ${LANG}: "${c.ta}" All dialogue is in Sri Lankan Tamil. ${END}`;
   const el = document.createElement("article");
   el.className = "clip";
   el.innerHTML = `
     <div class="clip-head">
-      <h3>Clip ${c.n}</h3>
+      <h3>Clip ${c.n}${c.n === 0 ? " · Opening" : ""}</h3>
       <span class="tag ${c.who ? "" : "plain"}">${c.who ? PHOTO[c.who] : "Text only, no photo"}</span>
       <span class="file">clip${id}.mp4 · <span class="dur">8 s</span></span>
     </div>
-    <div class="say"><em>${c.who ? "Vikash says:" : "Voiceover:"}</em> “${c.say}”</div>
-    <pre class="prompt" id="p${id}"></pre>
+    <div class="say"><span class="who">${c.speaker}</span><span class="ta" lang="ta"></span><span class="en"></span></div>
+    <pre class="prompt"></pre>
     <button class="copy" type="button" id="b${id}">Copy prompt</button>`;
-  el.querySelector("pre").textContent = c.p;
+  el.querySelector(".ta").textContent = c.ta;
+  el.querySelector(".en").textContent = c.en;
+  const pre = el.querySelector("pre");
+  pre.textContent = prompt;
   const btn = el.querySelector("button");
   btn.addEventListener("click", () => {
-    const pre = el.querySelector("pre");
     const ok = () => { btn.textContent = "Copied ✓"; btn.classList.add("done"); setTimeout(() => { btn.textContent = "Copy prompt"; btn.classList.remove("done"); }, 2000); };
     const fallback = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected, now tap Copy"; };
-    try { navigator.clipboard.writeText(c.p).then(ok, fallback); } catch (e) { fallback(); }
+    try { navigator.clipboard.writeText(prompt).then(ok, fallback); } catch (e) { fallback(); }
   });
   list.appendChild(el);
 }
