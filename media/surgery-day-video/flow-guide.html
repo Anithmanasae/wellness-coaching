@@ -1,0 +1,174 @@
+<title>Surgery Day Flow Shot List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: single readable column, one card per 8-second clip, copy button on each prompt */
+:root {
+  --bg: #f3f7f6;
+  --surface: #ffffff;
+  --ink: #14302b;
+  --muted: #557069;
+  --line: #d6e3df;
+  --accent: #0d7563;
+  --accent-ink: #ffffff;
+  --doc: #b4532a;
+  --doc-soft: #fbeee7;
+  --say: #e7f3f0;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a18; --surface: #162522; --ink: #e3efec; --muted: #9ab4ad; --line: #2a3d39;
+    --accent: #4fc2ab; --accent-ink: #0b1714; --doc: #f0956a; --doc-soft: #2d1f19; --say: #1b302c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a18; --surface: #162522; --ink: #e3efec; --muted: #9ab4ad; --line: #2a3d39;
+  --accent: #4fc2ab; --accent-ink: #0b1714; --doc: #f0956a; --doc-soft: #2d1f19; --say: #1b302c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(30px, 7vw, 44px); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 24px; font-weight: 800; }
+h3 { font-size: 19px; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); max-width: 62ch; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+header { display: grid; gap: 10px; }
+section { display: grid; gap: 14px; }
+ol.steps { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; }
+ol.steps li { padding-left: 4px; }
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 8px; }
+.photos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.photo { border-left: 4px solid var(--doc); background: var(--doc-soft); border-radius: 0 10px 10px 0; padding: 12px 14px; display: grid; gap: 4px; }
+.photo b { font-family: var(--display); font-weight: 600; }
+.photo span { color: var(--muted); font-size: 15px; }
+.clips { display: grid; gap: 16px; }
+.clip { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.clip-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.file { font-family: var(--mono); font-size: 14px; color: var(--muted); }
+.tag { font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--doc-soft); color: var(--doc); }
+.tag.plain { background: var(--say); color: var(--accent); }
+.say { background: var(--say); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
+.say em { font-style: normal; font-weight: 700; }
+.prompt { font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin: 0; max-height: 220px; overflow: auto; }
+button.copy { justify-self: start; font: 700 15px var(--body); color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 10px; padding: 10px 18px; cursor: pointer; min-height: 44px; }
+button.copy:focus-visible { outline: 3px solid var(--doc); outline-offset: 2px; }
+button.copy.done { background: var(--muted); }
+ul.check { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.dur { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) { button.copy { transition: background .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Patient video · Orthopaedic ward</div>
+    <h1>What to Expect on Surgery Day</h1>
+    <p class="lede">Shot list for Google Flow (Veo). There are 14 clips of 8 seconds each, and together they make a video of about 2 minutes. Vikash plays the doctor. Make each clip, save it with the file name shown, then send all the clips back to be joined, with subtitles and titles added.</p>
+  </header>
+
+  <section>
+    <h2>Before you start</h2>
+    <div class="photos">
+      <div class="photo"><b>Photo A: white coat</b><span>Vikash in a white coat with a stethoscope. Used in clips 1, 2, 13 and 14.</span></div>
+      <div class="photo"><b>Photo B: theatre scrubs</b><span>Vikash in green scrubs and a blue cap, with his mask lowered. Used in clips 6 and 8.</span></div>
+    </div>
+    <ol class="steps">
+      <li>Open <b>labs.google/flow</b> and sign in with your Google account.</li>
+      <li>Tap <b>New project</b>.</li>
+      <li>For clips marked <b>Vikash</b>, choose <b>Ingredients to Video</b> and upload Photo A or Photo B. For all other clips, choose <b>Text to Video</b>.</li>
+      <li>Set the video to <b>landscape 16:9</b> with <b>sound on</b>.</li>
+      <li>Tap <b>Copy prompt</b> below, paste it into Flow and generate.</li>
+      <li>Download the clip and rename it to the file name shown, for example <span class="file">clip01.mp4</span>.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>The 14 clips</h2>
+    <div class="clips" id="clips"></div>
+  </section>
+
+  <section>
+    <h2>Check each clip before keeping it</h2>
+    <div class="note">
+      <ul class="check">
+        <li>Vikash's face looks like him.</li>
+        <li>He says the line exactly as written, with nothing cut off or added. If not, generate it again.</li>
+        <li>No garbled signs or writing in the background.</li>
+        <li>No needles going into skin, and nothing frightening for patients.</li>
+        <li>Gloves, wristbands and monitors look right.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>When you're done</h2>
+    <p class="lede">Send all 14 files (<span class="file">clip01.mp4</span> to <span class="file">clip14.mp4</span>) back in one message. They will be joined in order, with subtitles, an opening title and an end card added.</p>
+  </section>
+</div>
+
+<script>
+const STYLE = "Soft natural light, no music, no on-screen text.";
+const CLIPS = [
+  { n: 1, who: "A", say: "Welcome to the ward. Feeling a bit nervous before surgery is completely normal.",
+    p: `Photorealistic video, 16:9. The doctor in this image stands in a bright, clean Sri Lankan hospital corridor, looking at the camera with a warm smile and open hand gestures. He says in a calm, friendly Sri Lankan English accent: "Welcome to the ward. Feeling a bit nervous before surgery is completely normal." Gentle slow push-in, quiet hospital ambience. ${STYLE}` },
+  { n: 2, who: "A", say: "Let's walk through what your surgery day will look like, from start to finish.",
+    p: `Photorealistic video, 16:9. Medium close-up of the doctor in this image in a bright hospital ward, speaking warmly to the camera, then smiling and nodding. He says in a calm Sri Lankan English accent: "Let's walk through what your surgery day will look like, from start to finish." Shallow depth of field, quiet ambience. ${STYLE}` },
+  { n: 3, say: "Your day begins right here in the ward. Our nurses will help you change into a clean gown.",
+    p: `Photorealistic video, 16:9. In a bright Sri Lankan hospital ward, a friendly nurse in a blue uniform helps a Sri Lankan woman in her 50s change into a light-blue patterned hospital gown behind a privacy curtain; the patient smiles, relaxed. A calm male voiceover in a Sri Lankan English accent says: "Your day begins right here in the ward. Our nurses will help you change into a clean gown." Slow camera move. ${STYLE}` },
+  { n: 4, say: "Please remove jewellery, hairpins, dentures and glasses, and we'll check your identification band.",
+    p: `Photorealistic video, 16:9. Close-up: the patient places her glasses, a watch, a ring and a small denture cup into a clear property bag on a bedside table, then a nurse's gloved hands check the white ID wristband on her wrist. Calm male voiceover in a Sri Lankan English accent: "Please remove jewellery, hairpins, dentures and glasses, and we'll check your identification band." Shallow depth of field. ${STYLE}` },
+  { n: 5, say: "When it's time, our staff will wheel you comfortably to the operating theatre. You won't be alone.",
+    p: `Photorealistic video, 16:9. Two hospital porters in teal scrubs gently wheel the patient, lying calmly on a trolley under a white blanket, down a bright clean hospital corridor towards the operating theatre doors. Tracking shot beside the trolley. Calm male voiceover in a Sri Lankan English accent: "When it's time, our staff will wheel you comfortably to the operating theatre. You won't be alone." ${STYLE}` },
+  { n: 6, who: "B", say: "Hello, I'm your anaesthetist. We'll just double-check your details to make sure everything is correct.",
+    p: `Photorealistic video, 16:9. At the operating theatre doors, the doctor in this image, wearing green scrubs and a blue scrub cap with his mask lowered, greets the patient on the trolley with a warm smile and checks her wristband against a clipboard. He says kindly in a Sri Lankan English accent: "Hello, I'm your anaesthetist. We'll just double-check your details to make sure everything is correct." Soft clinical light, no music, no on-screen text.` },
+  { n: 7, say: "We'll attach monitoring stickers, a blood pressure cuff, and a small clip on your finger.",
+    p: `Photorealistic video, 16:9. In a clean anaesthesia room, a nurse gently places monitoring stickers on the patient's upper chest over her gown, wraps a blood pressure cuff around her arm and clips a pulse oximeter on her finger; a monitor shows a steady green heartbeat line. Calm male voiceover in a Sri Lankan English accent: "We'll attach monitoring stickers, a blood pressure cuff, and a small clip on your finger." No needles. ${STYLE}` },
+  { n: 8, who: "B", say: "I'll place a small IV line in your hand, and soon you'll drift into a safe, deep sleep.",
+    p: `Photorealistic video, 16:9. The doctor in this image, in green scrubs and a blue scrub cap, leans over the patient lying on a theatre trolley, gently resting a hand on her shoulder and speaking reassuringly. He says softly in a Sri Lankan English accent: "I'll place a small IV line in your hand, and soon you'll drift into a safe, deep sleep." She smiles and slowly closes her eyes. Lighting softens. No needles shown, no music, no on-screen text.` },
+  { n: 9, say: "When surgery is finished, you'll wake up in the recovery room. You may feel a little sleepy.",
+    p: `Photorealistic video, 16:9. In a quiet recovery room with soft warm light, the Sri Lankan patient lies in bed under a blanket and slowly opens her eyes, a little sleepy but comfortable; monitors glow softly behind her. Calm male voiceover in a Sri Lankan English accent: "When surgery is finished, you'll wake up in the recovery room. You may feel a little sleepy." No music, no on-screen text.` },
+  { n: 10, say: "Our recovery nurses stay by your side, keeping you warm and making sure your pain is well managed.",
+    p: `Photorealistic video, 16:9. A kind recovery nurse in a blue uniform smiles and tucks a warm blanket around the resting patient, then checks the vital-signs monitor. Calm male voiceover in a Sri Lankan English accent: "Our recovery nurses stay by your side, keeping you warm and making sure your pain is well managed." Soft warm lighting, slow camera move, no music, no on-screen text.` },
+  { n: 11, say: "Once you're awake and stable, you'll return to your bed in the orthopaedic ward to rest.",
+    p: `Photorealistic video, 16:9. The patient is wheeled back into a bright, sunny orthopaedic ward with palm trees outside the windows; she sits up in bed, smiling, while her son sits beside her holding her hand. Calm male voiceover in a Sri Lankan English accent: "Once you're awake and stable, you'll return to your bed in the orthopaedic ward to rest." ${STYLE}` },
+  { n: 12, say: "Sip water when permitted, and remember, we are always just a call bell away.",
+    p: `Photorealistic video, 16:9. The patient sips water through a straw, then rests her hand next to a nurse call-bell handset with a red button clipped to the bed rail; close-up as her thumb rests on the button. Calm male voiceover in a Sri Lankan English accent: "Sip water when permitted, and remember, we are always just a call bell away." Bright soft light, no music, no on-screen text.` },
+  { n: 13, who: "A", say: "Any questions about your procedure? Just ask your doctor or nurse. We're here for you.",
+    p: `Photorealistic video, 16:9. The doctor in this image stands at a bright nurses' station with three smiling Sri Lankan nurses in blue uniforms. He speaks warmly to the camera in a Sri Lankan English accent: "Any questions about your procedure? Just ask your doctor or nurse. We're here for you." Then they all smile and wave. ${STYLE}` },
+  { n: 14, who: "A", say: "Wishing you a very smooth recovery.",
+    p: `Photorealistic video, 16:9. Close-up of the doctor in this image in a sunny hospital ward, smiling warmly at the camera. He says gently in a Sri Lankan English accent: "Wishing you a very smooth recovery." He gives a small nod and smile. Slow pull-back. ${STYLE}` },
+];
+const PHOTO = { A: "Vikash · Photo A (white coat)", B: "Vikash · Photo B (theatre scrubs)" };
+const list = document.getElementById("clips");
+for (const c of CLIPS) {
+  const id = String(c.n).padStart(2, "0");
+  const el = document.createElement("article");
+  el.className = "clip";
+  el.innerHTML = `
+    <div class="clip-head">
+      <h3>Clip ${c.n}</h3>
+      <span class="tag ${c.who ? "" : "plain"}">${c.who ? PHOTO[c.who] : "Text only, no photo"}</span>
+      <span class="file">clip${id}.mp4 · <span class="dur">8 s</span></span>
+    </div>
+    <div class="say"><em>${c.who ? "Vikash says:" : "Voiceover:"}</em> “${c.say}”</div>
+    <pre class="prompt" id="p${id}"></pre>
+    <button class="copy" type="button" id="b${id}">Copy prompt</button>`;
+  el.querySelector("pre").textContent = c.p;
+  const btn = el.querySelector("button");
+  btn.addEventListener("click", () => {
+    const pre = el.querySelector("pre");
+    const ok = () => { btn.textContent = "Copied ✓"; btn.classList.add("done"); setTimeout(() => { btn.textContent = "Copy prompt"; btn.classList.remove("done"); }, 2000); };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected, now tap Copy"; };
+    try { navigator.clipboard.writeText(c.p).then(ok, fallback); } catch (e) { fallback(); }
+  });
+  list.appendChild(el);
+}
+</script>
