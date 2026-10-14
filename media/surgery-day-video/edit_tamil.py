@@ -162,6 +162,35 @@ def card_png(path, lines):
     im.save(path)
 
 
+CREDITS = [
+    ("Concept, Script & Produced by", ["Dr. Clement Vikash Vasanth Raj", "Resident Medical Officer"]),
+    ("Clinical Review & Guidance", ["Dr. T. Balakumaran", "VOS"]),
+    ("Produced For", ["District General Hospital Kilinochchi", "Patient Education & Quality Improvement Initiative"]),
+    ("Approved By", ["Office of the Director, DGH Kilinochchi"]),
+    ("Language", ["Tamil / English"]),
+]
+COPYRIGHT = "© 2026 District General Hospital Kilinochchi. All Rights Reserved."
+
+
+def credits_png(path):
+    im = Image.new("RGB", (W, H), (12, 30, 28))
+    d = ImageDraw.Draw(im)
+    d.text((W / 2, 110), "VIDEO CREDITS", font=font(EN_BOLD, 52), fill=(255, 255, 255), anchor="mm")
+    d.rectangle([W / 2 - 60, 150, W / 2 + 60, 154], fill=(255, 214, 140))
+    flab, fname, fsub = font(EN_MED, 24), font(EN_BOLD, 38), font(EN_MED, 28)
+    y = 215
+    for label, lines in CREDITS:
+        d.text((W / 2, y), label.upper(), font=flab, fill=(120, 200, 182), anchor="mm")
+        y += 46
+        for i, l in enumerate(lines):
+            f, col = (fname, (255, 255, 255)) if i == 0 else (fsub, (190, 214, 208))
+            d.text((W / 2, y), l, font=f, fill=col, anchor="mm")
+            y += 50 if i == 0 else 42
+        y += 30
+    d.text((W / 2, H - 70), COPYRIGHT, font=font(EN_MED, 22), fill=(150, 176, 170), anchor="mm")
+    im.save(path)
+
+
 def speech_span(path, dur):
     """First and last moments of speech, from ffmpeg silence detection."""
     out = subprocess.run(["ffmpeg", "-i", path, "-af", "silencedetect=n=-35dB:d=0.35", "-vn", "-f", "null", "-"],
@@ -262,6 +291,11 @@ def main():
     card_png(end, lines)
     parts.append(os.path.join(tmp, "p_end.mp4"))
     make_card(end, 6.0, parts[-1], tmp)
+
+    credits = os.path.join(tmp, "credits.png")
+    credits_png(credits)
+    parts.append(os.path.join(tmp, "p_credits.mp4"))
+    make_card(credits, 9.0, parts[-1], tmp)
 
     listing = os.path.join(tmp, "list.txt")
     with open(listing, "w") as f:

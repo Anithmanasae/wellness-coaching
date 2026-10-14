@@ -48,3 +48,28 @@ I'll put a small cannula in your hand. In a little while you'll fall into a safe
 சத்திரசிகிச்சை முடிந்துவிட்டது. நீங்கள் இப்போது மீட்பு அறையில் இருக்கிறீர்கள். கொஞ்சம் தூக்கக் கலக்கமாக இருக்கலாம்.
 Your surgery is finished. You're in the recovery room now. You may feel a little drowsy.
 
+11
+00:01:31,971 --> 00:01:38,287
+நான் உங்கள் பக்கத்திலேயே இருப்பேன். குளிராமல் பார்த்துக்கொள்வோம். வலி இருந்தால் சொல்லுங்கள்.
+I'll be right beside you. We'll keep you warm. Tell us if you have any pain.
+
+12
+00:01:39,050 --> 00:01:46,481
+அம்மா, நீங்கள் மீண்டும் விடுதிக்கு வந்துவிட்டீர்கள். இப்போது நன்றாக ஓய்வெடுங்கள்.
+Amma, you're back on the ward. Rest well now.
+
+13
+00:01:47,050 --> 00:01:55,000
+அனுமதித்த பின் தண்ணீர் குடிக்கலாம். ஏதாவது தேவையென்றால் இந்த அழைப்பு மணியை அழுத்துங்கள்.
+You can drink water once we allow it. If you need anything, press this call bell.
+
+14
+00:01:57,221 --> 00:02:04,844
+சத்திரசிகிச்சை பற்றி ஏதாவது சந்தேகமா? உங்கள் வைத்தியரிடமோ தாதியிடமோ தயங்காமல் கேளுங்கள்.
+Any questions about your surgery? Don't hesitate to ask your doctor or nurse.
+
+15
+00:02:07,083 --> 00:02:10,709
+நீங்கள் விரைவில் குணமடைய வாழ்த்துகிறோம்!
+We wish you a speedy recovery!
+
