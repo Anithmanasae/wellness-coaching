@@ -13,6 +13,8 @@ CUT = 7.8                         # source turns black here
 CAP_ON = 4.3                      # source caption appears here
 BAND = (210, 1230, 870, 1400)     # source caption area, in 1080x1920 output pixels (x0, y0, x1, y1)
 NEW_CAPTION = ["DON'T WASTE YOUR TIME ON REELS", "INSTEAD GET TO WORK ON", "YOUR RESTAURANT BUSINESS"]
+CTA_TOP = ["track every bill & every rupee", 'with "smart serve"', "(it's on the play store)", "click the link in my bio"]
+CTA_BOTTOM = 'comment "APP" & I\'ll send you the name'
 CTA_LEN = 6.8                     # includes the dissolve overlap
 XFADE = 0.8                       # dissolve length, matched to the source's own transition
 SFX_SRC = (7.9, 8.98)             # the source's end sound effect, replayed as the CTA opens
@@ -77,7 +79,7 @@ if __name__ == "__main__":
         "-c:a", "aac", "-ar", "44100", "-ac", "2", "-shortest", cta_mp4], stdin=subprocess.PIPE)
     random.seed(15)
     for i in range(int(CTA_LEN * FPS)):
-        img = Image.new("RGB", (W, H)); scene_cta(img, i / FPS); ff.stdin.write(img.tobytes())
+        img = Image.new("RGB", (W, H)); scene_cta(img, i / FPS, CTA_BOTTOM, CTA_TOP); ff.stdin.write(img.tobytes())
     ff.stdin.close(); ff.wait()
     # 3) join
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", hook_mp4, "-i", cta_mp4, "-i", SRC, "-filter_complex",

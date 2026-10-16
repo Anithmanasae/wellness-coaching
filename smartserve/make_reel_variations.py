@@ -74,7 +74,9 @@ def rays(img, t):
     ImageDraw.Draw(glow).ellipse([cx - pulse, cy - pulse, cx + pulse, cy + pulse], fill=255)
     img.paste(Image.composite(Image.new("RGB", (W, H), (205, 230, 255)), bg, glow.filter(ImageFilter.GaussianBlur(120))))
 
-def scene_cta(img, t):  # identical across every variation
+CTA_TOP = ["track every bill & every rupee", 'with "smart serve"', "(it's on the play store)"]
+
+def scene_cta(img, t, bottom="type SAME if this happened to you", top=CTA_TOP):  # identical across every variation
     rays(img, t)
     d = ImageDraw.Draw(img)
     a = ease((t - 0.2) / 0.5); y = 1180 + int(80 * (1 - a))
@@ -84,8 +86,8 @@ def scene_cta(img, t):  # identical across every variation
         d.text((250, y + 95), "₹48,250", font=font(84, "Black"), fill=(20, 20, 25))
         d.text((250, y + 210), "✓ Cash matched · 0 missing bills", font=font(36, "SemiBold"), fill=(30, 160, 80))
     app_icon(img, W / 2, 880, 280, glow=True)
-    top_bar(img, ["track every bill & every rupee", 'with "smart serve"', "(it's on the play store)"])
-    if t > 0.6: caption(img, "type SAME if this happened to you", 1640, 52)
+    top_bar(img, top)
+    if t > 0.6: caption(img, bottom, 1640, 52)
 
 def hook_captions(img, t, beats, red_from):
     """beats: [(start, text)], shows the latest; beats at index >= red_from go red and pop."""
