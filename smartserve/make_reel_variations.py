@@ -3,6 +3,8 @@
 # Usage: python3 make_reel_variations.py [variation_number ...]   (default: all)
 import math, os, random, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import soundtrack
 
 W, H, FPS = 1080, 1920, 30
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -233,23 +235,31 @@ VARIATIONS = {
     7: ("busy_but_broke", hook_shutter, "restaurant owners, do you know your REAL profit today??"),
 }
 
+SFX_CUES = {
+    3: [(i * 0.12, "paper") for i in range(6)] + [(1.5 + i * 0.12, "stamp") for i in range(6)]
+       + [(0.55, "pop"), (1.5, "impact"), (2.4, "impact")],
+    4: [(k / 7, "buzz") for k in range(0, 25, 5)] + [(0.8, "pop"), (1.6, "impact"), (2.5, "impact")],
+    5: [(0.6, "pop"), (1.4, "pop"), (1.6, "whoosh"), (1.9, "whoosh"), (2.2, "impact"), (2.8, "impact")],
+    6: [(i * 0.18, "clink") for i in range(6)] + [(0.7, "pop"), (1.5, "impact"), (1.7, "whoosh"), (2.4, "impact")],
+    7: [(0.7, "pop"), (1.5, "impact"), (2.0, "shutter"), (2.9, "impact")],
+}
+
 def render(num):
     name, hook, question = VARIATIONS[num]
     out = os.path.join(HERE, f"smartserve_reel_{num:02d}_{name}.mp4")
     scenes = [(hook, 3.6), (scene_question(question), 2.6), (scene_cta, 6.0)]
     total = sum(d for _, d in scenes); c1, c2 = scenes[0][1], scenes[0][1] + scenes[1][1]
-    expr = (f"if(lt(t,{c1}), 0.25*sin(2*PI*55*t)*(0.6+0.4*sin(2*PI*4*t)) + 0.08*sin(2*PI*110*t),"
-            f" if(lt(t,{c2}), 0.6*sin(2*PI*48*t)*exp(-4*(t-{c1})) + 0.12*sin(2*PI*220*t)*(0.5+0.5*sin(2*PI*6*t)),"
-            f" 0.6*sin(2*PI*45*t)*exp(-4*(t-{c2})) + 0.12*(sin(2*PI*261.6*t)+sin(2*PI*329.6*t)+sin(2*PI*392*t))*min(1,(t-{c2})*2)))")
+    wav = out[:-4] + ".wav"
+    soundtrack.build(wav, total, c1, c2, SFX_CUES[num])
     ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
-        "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-f", "lavfi", "-i", f"aevalsrc='{expr}':s=44100:d={total}",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac",
-        "-af", f"afade=t=out:st={total - 0.6}:d=0.6", "-shortest", "-movflags", "+faststart", out], stdin=subprocess.PIPE)
+        "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-i", wav,
+        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
+        "-shortest", "-movflags", "+faststart", out], stdin=subprocess.PIPE)
     random.seed(num)
     for fn, dur in scenes:
         for i in range(int(dur * FPS)):
             img = Image.new("RGB", (W, H)); fn(img, i / FPS); ff.stdin.write(img.tobytes())
-    ff.stdin.close(); ff.wait()
+    ff.stdin.close(); ff.wait(); os.remove(wav)
     print("done", out)
 
 if __name__ == "__main__":

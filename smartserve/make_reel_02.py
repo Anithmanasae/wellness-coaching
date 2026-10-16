@@ -109,19 +109,20 @@ def scene_pitch(img, t):
 SCENES = [(scene_hook, 3.4), (scene_q, 2.6), (scene_pitch, 6.0)]
 TOTAL = sum(d for _, d in SCENES)
 
-# soundtrack: tense drone -> hit at the cut -> warm chord on the pitch
+# original soundtrack + sound effects (see soundtrack.py)
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import soundtrack
 c1, c2 = SCENES[0][1], SCENES[0][1] + SCENES[1][1]
-expr = (f"if(lt(t,{c1}), 0.25*sin(2*PI*55*t)*(0.6+0.4*sin(2*PI*4*t)) + 0.08*sin(2*PI*110*t),"
-        f" if(lt(t,{c2}), 0.6*sin(2*PI*48*t)*exp(-4*(t-{c1})) + 0.12*sin(2*PI*220*t)*(0.5+0.5*sin(2*PI*6*t)),"
-        f" 0.6*sin(2*PI*45*t)*exp(-4*(t-{c2})) + 0.12*(sin(2*PI*261.6*t)+sin(2*PI*329.6*t)+sin(2*PI*392*t))*min(1,(t-{c2})*2)))")
+WAV = OUT[:-4] + ".wav"
+soundtrack.build(WAV, TOTAL, c1, c2, [(s_, "pop") for s_, _ in HOOK[1:3]] + [(2.1, "impact"), (2.5, "impact")])
 ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
-    "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
-    "-f", "lavfi", "-i", f"aevalsrc='{expr}':s=44100:d={TOTAL}",
+    "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-i", WAV,
     "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-    "-c:a", "aac", "-af", "afade=t=out:st=" + str(TOTAL - 0.6) + ":d=0.6", "-shortest", "-movflags", "+faststart", OUT],
+    "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", OUT],
     stdin=subprocess.PIPE)
 for fn, dur in SCENES:
     for i in range(int(dur * FPS)):
         img = Image.new("RGB", (W, H)); fn(img, i / FPS); ff.stdin.write(img.tobytes())
-ff.stdin.close(); ff.wait()
+ff.stdin.close(); ff.wait(); os.remove(WAV)
 print("done", TOTAL, "s")
