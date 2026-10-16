@@ -96,9 +96,28 @@ def sfx_sparkle():
     for k, m in enumerate((84, 88, 91, 96)): add(out, pluck(note(m), 0.5, 2), k * 0.07, 0.5)
     return out
 
+def sfx_airhorn(dur=0.32):
+    t = t_(dur); x = np.zeros(len(t))
+    for f in (466.2, 587.3, 698.5):
+        for det in (-1.5, 1.5): x += np.sign(np.sin(2 * np.pi * (f + det) * t)) * 0.5 + np.sin(2 * np.pi * 2 * (f + det) * t) * 0.3
+    return x / 6 * np.minimum(1, t / .01) * np.minimum(1, (dur - t) / .03)
+def sfx_siren(dur=0.9):
+    t = t_(dur); f = 700 + 500 * np.sin(2 * np.pi * 3 * t)
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, (dur - t) / .05)
+def sfx_sad_trombone():
+    out = np.zeros(int(2.4 * SR))
+    for i, (m, d) in enumerate(((62, .38), (61, .38), (60, .38), (59, 1.2))):
+        t = t_(d); f = note(m - 12) * (1 + 0.012 * np.sin(2 * np.pi * 6 * t) * (t > .15))
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        x = sum(np.sin(k * ph) / k for k in range(1, 9)) * np.minimum(1, t / .03) * np.minimum(1, (d - t) / .06)
+        add(out, x * 0.5, sum(dd for _, dd in ((62, .38), (61, .38), (60, .38))[:i]))
+    return out
+def sfx_rain(dur): return band(noise(dur), 3000, 12000) * 0.25
+
 SFX = {"impact": (sfx_impact, .8), "whoosh": (sfx_whoosh, .5), "pop": (sfx_pop, .35), "stamp": (sfx_stamp, .8),
        "paper": (sfx_paper, .35), "clink": (sfx_clink, .45), "shutter": (sfx_shutter, .5), "buzz": (sfx_buzz, .18),
-       "riser": (sfx_riser, .45), "scratch": (sfx_scratch, .6), "kaching": (sfx_kaching, .7), "sparkle": (sfx_sparkle, .5)}
+       "riser": (sfx_riser, .45), "scratch": (sfx_scratch, .6), "kaching": (sfx_kaching, .7), "sparkle": (sfx_sparkle, .5),
+       "airhorn": (sfx_airhorn, .7), "siren": (sfx_siren, .35)}
 
 # ---------------- music sections ----------------
 def music_tense(dur):
@@ -139,6 +158,18 @@ def music_uplift(dur):
         add(out, hat(), b * BEAT + BEAT / 2, .12); b += 1
     return out
 
+def music_happy(dur):
+    """bouncy C-major bop for the 'winning' meme panel."""
+    out = np.zeros(int(dur * SR)); b16 = BEAT / 4; arp = (60, 64, 67, 72, 67, 64)
+    k = 0
+    while k * b16 < dur:
+        add(out, pluck(note(arp[k % 6] + 12), 0.18, 2), k * b16, .18)
+        if k % 4 == 0: add(out, kick(), k * b16, .55); add(out, sub(note(36 if (k // 8) % 2 == 0 else 43), b16 * 3), k * b16, .3)
+        if k % 8 == 4: add(out, clap(), k * b16, .3)
+        if k % 2: add(out, hat(), k * b16, .1)
+        k += 1
+    return out
+
 def build(path, total, c1, c2, events=()):
     """total length, hook->question cut at c1, question->CTA cut at c2, events = [(time, sfx_name)]."""
     mix = np.zeros(int(total * SR) + SR)
@@ -150,6 +181,10 @@ def build(path, total, c1, c2, events=()):
            (c2 + 0.2, "kaching"), (c2 + 0.05, "sparkle"), (c2 + 0.6, "pop")]
     for at, name in list(events) + std:
         fn, g = SFX[name]; add(mix, fn(), at, g)
+    finish(mix, path, total)
+
+def finish(mix, path, total):
+    """trim, fade, limit, normalise and write a mono 16-bit WAV."""
     mix = mix[:int(total * SR)]
     fade = int(0.6 * SR); mix[-fade:] *= np.linspace(1, 0, fade)
     mix = np.tanh(mix * 1.2)                        # gentle limiter
