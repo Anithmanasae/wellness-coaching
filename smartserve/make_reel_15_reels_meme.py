@@ -5,7 +5,7 @@ import os, random, subprocess, sys
 from PIL import Image, ImageDraw, ImageFilter
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import soundtrack as st
-from make_reel_variations import W, H, FPS, font, scene_cta, WHITE, BLACK
+from make_reel_variations import W, H, FPS, font, scene_cta_comment, WHITE, BLACK
 
 SRC = sys.argv[1]
 OUT = os.path.join(HERE, "smartserve_reel_15_reelsmeme_get_to_work.mp4")
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         "-c:a", "aac", "-ar", "44100", "-ac", "2", "-shortest", cta_mp4], stdin=subprocess.PIPE)
     random.seed(15)
     for i in range(int(CTA_LEN * FPS)):
-        img = Image.new("RGB", (W, H)); scene_cta(img, i / FPS, CTA_BOTTOM, CTA_TOP); ff.stdin.write(img.tobytes())
+        img = Image.new("RGB", (W, H)); scene_cta_comment(img, i / FPS); ff.stdin.write(img.tobytes())
     ff.stdin.close(); ff.wait()
     # 3) join
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", hook_mp4, "-i", cta_mp4, "-i", SRC, "-filter_complex",

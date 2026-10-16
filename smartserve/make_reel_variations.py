@@ -89,6 +89,36 @@ def scene_cta(img, t, bottom="type SAME if this happened to you", top=CTA_TOP): 
     top_bar(img, top)
     if t > 0.6: caption(img, bottom, 1640, 52)
 
+def scene_cta_comment(img, t, keyword="APP"):
+    """scannable CTA: what it does (top) -> proof (middle) -> one clear action (bottom)."""
+    rays(img, t)
+    d = ImageDraw.Draw(img)
+    # 1) what it does
+    d.rectangle([0, 0, W, 400], fill=WHITE)
+    def centre(txt, y, f, col):
+        w = d.textlength(txt, font=f); d.text(((W - w) / 2, y), txt, font=f, fill=col)
+    centre("Track every bill", 95, font(76, "Black"), BLACK)
+    centre("& every rupee", 180, font(76, "Black"), BLACK)
+    f = font(46, "Bold"); pill = "Smart Serve  ·  free on Play Store"; w = d.textlength(pill, font=f)
+    d.rounded_rectangle([(W - w) / 2 - 30, 290, (W + w) / 2 + 30, 360], 35, fill=BLUE)
+    d.text(((W - w) / 2, 298), pill, font=f, fill=WHITE)
+    # 2) proof
+    app_icon(img, W / 2, 700, 230, glow=True)
+    a = ease((t - 0.2) / 0.5); y = 920 + int(60 * (1 - a))
+    if t > 0.2:
+        d.rounded_rectangle([210, y, W - 210, y + 270], 36, fill=WHITE)
+        d.text((260, y + 35), "Today's sale", font=font(40, "Medium"), fill=(110, 110, 120))
+        d.text((260, y + 85), "₹48,250", font=font(84, "Black"), fill=(20, 20, 25))
+        d.text((260, y + 195), "✓ Cash matched · 0 missing bills", font=font(34, "SemiBold"), fill=(30, 160, 80))
+    # 3) one clear action
+    if t > 0.6:
+        s = pop(t, 0.6, 0.3)
+        f = font(int(96 * s) or 1, "Black"); txt = f'Comment "{keyword}"'; w = d.textlength(txt, font=f)
+        d.rounded_rectangle([(W - w) / 2 - 40, 1300, (W + w) / 2 + 40, 1300 + int(140 * s)], 30, fill=(255, 214, 0))
+        d.text(((W - w) / 2, 1312), txt, font=f, fill=BLACK)
+        caption(img, "I'll DM you the app link", 1500, 54)
+        caption(img, "or tap the link in my bio", 1575, 44, (215, 230, 255))
+
 def hook_captions(img, t, beats, red_from):
     """beats: [(start, text)], shows the latest; beats at index >= red_from go red and pop."""
     idx = max(i for i, (s, _) in enumerate(beats) if t >= s)
