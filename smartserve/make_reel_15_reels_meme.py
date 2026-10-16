@@ -13,7 +13,8 @@ CUT = 7.8                         # source turns black here
 CAP_ON = 4.3                      # source caption appears here
 BAND = (210, 1230, 870, 1400)     # source caption area, in 1080x1920 output pixels (x0, y0, x1, y1)
 NEW_CAPTION = ["DON'T WASTE YOUR TIME ON REELS", "INSTEAD GET TO WORK ON", "YOUR RESTAURANT BUSINESS"]
-CTA_LEN = 6.0
+CTA_LEN = 6.8                     # includes the dissolve overlap
+XFADE = 0.8                       # dissolve length, matched to the source's own transition
 
 def erase_caption(img):
     """remove the burnt-in white caption: mask its bright pixels and diffuse the surroundings into the holes."""
@@ -76,8 +77,10 @@ if __name__ == "__main__":
     ff.stdin.close(); ff.wait()
     # 3) join
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", hook_mp4, "-i", cta_mp4, "-filter_complex",
-        "[0:v]setsar=1[v0];[1:v]setsar=1[v1];[0:a]aformat=channel_layouts=stereo:sample_rates=44100[a0];"
-        "[1:a]aformat=channel_layouts=stereo:sample_rates=44100[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]",
+        "[0:v]setsar=1,fps=30[v0];[1:v]setsar=1,fps=30[v1];[0:a]aformat=channel_layouts=stereo:sample_rates=44100[a0];"
+        "[1:a]aformat=channel_layouts=stereo:sample_rates=44100[a1];"
+        # same soft dissolve the source uses between its dance clip and the photo
+        f"[v0][v1]xfade=transition=fade:duration={XFADE}:offset={CUT - XFADE}[v];[a0][a1]acrossfade=d={XFADE}[a]",
         "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", OUT], check=True)
     for f in (hook_mp4, cta_wav, cta_mp4): os.remove(f)
