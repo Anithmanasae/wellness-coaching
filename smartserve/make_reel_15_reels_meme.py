@@ -7,7 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import soundtrack as st
 from make_reel_variations import W, H, FPS, font, scene_cta_comment, WHITE, BLACK
 
-SRC = sys.argv[1]
+SRC = sys.argv[1] if len(sys.argv) > 1 else None
 OUT = os.path.join(HERE, "smartserve_reel_15_reelsmeme_get_to_work.mp4")
 CUT = 7.8                         # source turns black here
 CAP_ON = 4.3                      # source caption appears here

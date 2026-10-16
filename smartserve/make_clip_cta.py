@@ -1,6 +1,6 @@
-# Any meme clip -> dissolve -> scannable Smart Serve "Comment APP" CTA.
-# The clip plays untouched (its own audio). As the CTA opens, the transition sound effect from
-# Reel #15 (assets/cta_transition_sfx.wav) plays, then our CTA music takes over.
+# Any meme clip -> dissolve -> "get to work on your restaurant business" photo (assets/getwork_photo.mp4)
+# -> transition sound effect (assets/cta_transition_sfx.wav) as the scannable "Comment APP" CTA opens
+# -> our CTA music. The clip itself plays untouched with its own audio.
 # Non-vertical clips are centred on a blurred copy of themselves to fill 9:16.
 # Usage: python3 make_clip_cta.py <clip.mp4> <name> [reel_number] [cut_seconds]
 import os, random, subprocess, sys
@@ -15,6 +15,8 @@ DUR = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", 
 CUT = float(sys.argv[4]) if len(sys.argv) > 4 else DUR   # where the clip hands over to the CTA
 OUT = os.path.join(HERE, f"smartserve_reel_{NUM:02d}_clip_{NAME}.mp4")
 SFX = os.path.join(HERE, "assets", "cta_transition_sfx.wav")
+PHOTO = os.path.join(HERE, "assets", "getwork_photo.mp4")
+PHOTO_LEN = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", PHOTO]))
 SFX_LEN = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", SFX]))
 XFADE = 0.8
 
@@ -46,19 +48,25 @@ if __name__ == "__main__":
     for i in range(int(CTA_LEN * FPS)):
         img = Image.new("RGB", (W, H)); scene_cta_comment(img, i / FPS); ff.stdin.write(img.tobytes())
     ff.stdin.close(); ff.wait()
-    off = CUT - XFADE
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-t", str(CUT), "-i", SRC, "-i", cta_mp4, "-i", SFX, "-filter_complex",
+    o1 = CUT - XFADE                       # clip -> photo dissolve
+    o2 = o1 + PHOTO_LEN - XFADE            # photo -> CTA dissolve (sound effect plays here)
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-t", str(CUT), "-i", SRC, "-i", PHOTO, "-i", cta_mp4, "-i", SFX,
+        "-filter_complex",
         # clip on a blurred 9:16 fill of itself
         f"[0:v]fps={FPS},split[c1][c2];"
         f"[c1]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},gblur=sigma=40,eq=brightness=-0.08[bg];"
         f"[c2]scale={W}:-2[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1[v0];"
-        f"[1:v]setsar=1,fps={FPS}[v1];"
-        f"[v0][v1]xfade=transition=fade:duration={XFADE}:offset={off}[v];"
-        f"[0:a]aresample=44100,aformat=channel_layouts=stereo,volume={gain_to():.2f}dB,alimiter=limit=0.89,afade=t=out:st={off}:d={XFADE}[a0];"
-        f"[2:a]aformat=channel_layouts=stereo:sample_rates=44100,adelay={int(off * 1000)}:all=1[fx];"
-        f"[1:a]aformat=channel_layouts=stereo:sample_rates=44100,adelay={int(off * 1000)}:all=1[a1];"
-        "[a0][fx][a1]amix=inputs=3:duration=longest:normalize=0[a]",
+        f"[1:v]setsar=1,fps={FPS}[v1];[2:v]setsar=1,fps={FPS}[v2];"
+        f"[v0][v1]xfade=transition=fade:duration={XFADE}:offset={o1}[v01];"
+        f"[v01][v2]xfade=transition=fade:duration={XFADE}:offset={o2}[v];"
+        f"[0:a]aresample=44100,aformat=channel_layouts=stereo,volume={gain_to():.2f}dB,alimiter=limit=0.89,"
+        f"afade=t=out:st={o1}:d={XFADE}[a0];"
+        f"[1:a]aformat=channel_layouts=stereo:sample_rates=44100,afade=t=in:d={XFADE},"
+        f"afade=t=out:st={PHOTO_LEN - XFADE}:d={XFADE},adelay={int(o1 * 1000)}:all=1[a1];"
+        f"[3:a]aformat=channel_layouts=stereo:sample_rates=44100,adelay={int(o2 * 1000)}:all=1[fx];"
+        f"[2:a]aformat=channel_layouts=stereo:sample_rates=44100,adelay={int(o2 * 1000)}:all=1[a2];"
+        "[a0][a1][fx][a2]amix=inputs=4:duration=longest:normalize=0[a]",
         "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "192k", "-t", str(off + CTA_LEN), "-movflags", "+faststart", OUT], check=True)
+        "-c:a", "aac", "-b:a", "192k", "-t", str(o2 + CTA_LEN), "-movflags", "+faststart", OUT], check=True)
     for f in (cta_wav, cta_mp4): os.remove(f)
     print("done", OUT)
