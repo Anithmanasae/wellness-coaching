@@ -6,7 +6,7 @@ W, H, FPS = 1080, 1920, 30
 OUT = sys.argv[1]
 F = "/usr/share/fonts/opentype/inter/"
 def font(sz, w="Bold"): return ImageFont.truetype(F + f"Inter-{w}.otf", sz)
-ORANGE = (255, 122, 0); WHITE = (255, 255, 255); BLACK = (0, 0, 0)
+BLUE = (24, 63, 191); SKY = (84, 175, 247); WHITE = (255, 255, 255); BLACK = (0, 0, 0)
 random.seed(7)
 
 def clamp(x): return max(0.0, min(1.0, x))
@@ -20,24 +20,21 @@ def caption(img, txt, y, sz=78, col=WHITE):
 def top_bar(img, lines, bar_h=420):
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, W, bar_h], fill=WHITE)
-    f = font(50, "Medium"); lh = 64
+    f = font(56, "ExtraBold"); lh = 70
     y0 = bar_h - 40 - lh * len(lines)
     for i, ln in enumerate(lines):
         w = d.textlength(ln, font=f)
         d.text(((W - w) / 2, y0 + i * lh), ln, font=f, fill=BLACK)
 
+import os
+LOGO = Image.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo.png")).convert("RGBA")
 def app_icon(img, cx, cy, s, glow=False):
     if glow:
         g = Image.new("RGBA", img.size, (0, 0, 0, 0)); gd = ImageDraw.Draw(g)
-        gd.ellipse([cx - s * 1.6, cy - s * 1.6, cx + s * 1.6, cy + s * 1.6], fill=(255, 200, 80, 150))
-        img.paste(g.filter(ImageFilter.GaussianBlur(60)), (0, 0), g.filter(ImageFilter.GaussianBlur(60)))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle([cx - s / 2, cy - s / 2, cx + s / 2, cy + s / 2], s * .23, fill=ORANGE)
-    # cloche (serving dome) glyph
-    r = s * .28
-    d.chord([cx - r, cy - r * .9, cx + r, cy + r * 1.1], 180, 360, fill=WHITE)
-    d.rectangle([cx - r * 1.25, cy + r * .1, cx + r * 1.25, cy + r * .25], fill=WHITE)
-    d.ellipse([cx - s * .05, cy - r * 1.05, cx + s * .05, cy - r * .85], fill=WHITE)
+        gd.ellipse([cx - s * 1.6, cy - s * 1.6, cx + s * 1.6, cy + s * 1.6], fill=(150, 210, 255, 170))
+        g = g.filter(ImageFilter.GaussianBlur(60)); img.paste(g, (0, 0), g)
+    l = LOGO.resize((int(s), int(s)), Image.LANCZOS)
+    img.paste(l, (int(cx - s / 2), int(cy - s / 2)), l)
 
 def note(d, x, y, ang, col=(170, 140, 190)):
     # simple ₹500 note, rotated rectangle
@@ -78,21 +75,21 @@ def flicker_bg(img, t, top):
 
 def scene_q(img, t):
     flicker_bg(img, t, 420)
-    app_icon(img, W / 2, 1050, 120)
+    app_icon(img, W / 2, 1050, 170)
     top_bar(img, ["did you check today's galla bhai??"])
 
 def rays(img, t):
     cx, cy = W / 2, 1060
-    bg = Image.new("RGB", (W, H), (60, 32, 8)); d = ImageDraw.Draw(bg)
+    bg = Image.new("RGB", (W, H), (6, 16, 60)); d = ImageDraw.Draw(bg)
     for k in range(24):
         a = math.radians(k * 15 + t * 12)
         d.polygon([(cx, cy), (cx + math.cos(a - .07) * 1600, cy + math.sin(a - .07) * 1600),
-                   (cx + math.cos(a + .07) * 1600, cy + math.sin(a + .07) * 1600)], fill=(150, 90, 25))
+                   (cx + math.cos(a + .07) * 1600, cy + math.sin(a + .07) * 1600)], fill=(24, 63, 191))
     bg = bg.filter(ImageFilter.GaussianBlur(18))
     glow = Image.new("L", (W, H), 0)
     pulse = 380 + 60 * math.sin(t * 5)
     ImageDraw.Draw(glow).ellipse([cx - pulse, cy - pulse, cx + pulse, cy + pulse], fill=255)
-    bg = Image.composite(Image.new("RGB", (W, H), (255, 236, 180)), bg, glow.filter(ImageFilter.GaussianBlur(120)))
+    bg = Image.composite(Image.new("RGB", (W, H), (205, 230, 255)), bg, glow.filter(ImageFilter.GaussianBlur(120)))
     img.paste(bg)
 
 def scene_pitch(img, t):
@@ -105,7 +102,7 @@ def scene_pitch(img, t):
         d.text((250, y + 40), "Today's sale", font=font(40, "Medium"), fill=(110, 110, 120))
         d.text((250, y + 95), "₹48,250", font=font(84, "Black"), fill=(20, 20, 25))
         d.text((250, y + 210), "✓ Cash matched · 0 missing bills", font=font(36, "SemiBold"), fill=(30, 160, 80))
-    app_icon(img, W / 2, 900, 200, glow=True)
+    app_icon(img, W / 2, 880, 280, glow=True)
     top_bar(img, ["track every bill & every rupee", 'with "smart serve"', "(it's on the play store)"])
     if t > 0.6: caption(img, "type SAME if this happened to you", 1640, 52)
 

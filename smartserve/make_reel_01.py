@@ -6,7 +6,12 @@ OUT = sys.argv[1]
 F = "/usr/share/fonts/opentype/inter/"
 def font(sz, w="Black"): return ImageFont.truetype(F + f"Inter-{w}.otf", sz)
 
-BG = (18, 18, 22); WHITE = (255, 255, 255); YEL = (255, 204, 0)
+BG = (8, 18, 58); WHITE = (255, 255, 255); YEL = (255, 204, 0)
+BLUE = (24, 63, 191); SKY = (84, 175, 247)
+import os
+LOGO = Image.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo.png")).convert("RGBA")
+def logo(img, cx, cy, s):
+    l = LOGO.resize((int(s), int(s)), Image.LANCZOS); img.paste(l, (int(cx - s / 2), int(cy - s / 2)), l)
 RED = (255, 72, 72); GRN = (46, 214, 120); GREY = (150, 150, 160)
 
 def clamp(x): return max(0.0, min(1.0, x))
@@ -49,7 +54,7 @@ def pizza(img, cx, cy, r, slice_gap=0.0):
 
 def progress_bar(img, t, total):
     d = ImageDraw.Draw(img)
-    d.rectangle([0, 0, W * t / total, 10], fill=YEL)
+    d.rectangle([0, 0, W * t / total, 10], fill=SKY)
 
 
 ORANGE = (255, 122, 0)
@@ -109,9 +114,9 @@ def phone(img, t):
     d = ImageDraw.Draw(img)
     px0, py0, px1, py1 = 210, 470, W - 210, 1430
     d.rounded_rectangle([px0, py0, px1, py1], 60, fill=(250, 250, 252), outline=(60, 60, 70), width=14)
-    d.rounded_rectangle([px0 + 40, py0 + 50, px1 - 40, py0 + 150], 24, fill=ORANGE)
+    d.rounded_rectangle([px0 + 40, py0 + 50, px1 - 40, py0 + 150], 24, fill=BLUE)
     f = font(46, "Black"); fm = font(34, "SemiBold"); fs = font(30, "Medium")
-    d.text((px0 + 70, py0 + 72), "Smart Serve", font=f, fill=WHITE)
+    logo(img, px0 + 110, py0 + 100, 80); d.text((px0 + 165, py0 + 72), "Smart Serve", font=f, fill=WHITE)
     d.text((px0 + 50, py0 + 185), "Real profit per order · today", font=fs, fill=(120, 120, 130))
     rows = [("Dine-in", "₹212", GRN), ("Takeaway", "₹188", GRN), ("Swiggy", "₹96", YEL), ("Zomato (offer)", "₹41", RED)]
     for i, (n, m, c) in enumerate(rows):
@@ -119,18 +124,18 @@ def phone(img, t):
         if t < st: continue
         a = ease((t - st) / 0.3)
         y = py0 + 250 + i * 160 + int(30 * (1 - a))
-        d.rounded_rectangle([px0 + 40, y, px1 - 40, y + 130], 24, fill=(240, 240, 245))
+        d.rounded_rectangle([px0 + 40, y, px1 - 40, y + 130], 24, fill=(236, 241, 252))
         d.text((px0 + 70, y + 40), n, font=fm, fill=(30, 30, 35))
         bw = d.textlength(m, font=f)
         d.text((px1 - 70 - bw, y + 36), m, font=f, fill=c)
 
 def scene5(img, t):  # CTA
     text_c(img, "See the REAL profit", 250, 70, scale=pop(t, 0.0))
-    text_c(img, "on every order.", 350, 76, YEL, scale=pop(t, 0.2))
+    text_c(img, "on every order.", 350, 76, SKY, scale=pop(t, 0.2))
     phone(img, t)
     if t > 2.4:
         s = pop(t, 2.4)
-        text_c(img, "Comment  PROFIT", 1560, 96, BG, scale=s, box=YEL)
+        text_c(img, "Comment  PROFIT", 1560, 96, WHITE, scale=s, box=BLUE)
         text_c(img, "Smart Serve free download link ↓", 1690, 48, WHITE, w="Bold", scale=s)
 
 SCENES = [(scene1, 3.0), (scene2, 5.5), (scene3, 5.0), (scene4, 4.5), (scene5, 6.5)]
