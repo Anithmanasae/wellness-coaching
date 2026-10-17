@@ -167,4 +167,8 @@ if __name__ == "__main__":
     for k in range(int(END * FPS)):
         img = Image.new("RGB", (W, H)); end_card(img, k / FPS); ff.stdin.write(img.tobytes())
     ff.stdin.close(); ff.wait(); os.remove(wav)
+    # bring loudness up to the other reels (~-14 LUFS) with a limiter
+    tmp = OUT[:-4] + "_tmp.mp4"; os.replace(OUT, tmp)
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, "-c:v", "copy", "-af", "volume=2.6dB,alimiter=limit=0.9",
+                    "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", OUT], check=True); os.remove(tmp)
     print("done", OUT, total)
