@@ -12,7 +12,13 @@ OUT = os.path.join(HERE, "smartserve_reel_15_reelsmeme_get_to_work.mp4")
 CUT = 7.8                         # source turns black here
 CAP_ON = 4.3                      # source caption appears here
 BAND = (210, 1230, 870, 1400)     # source caption area, in 1080x1920 output pixels (x0, y0, x1, y1)
-NEW_CAPTION = ["DON'T WASTE YOUR TIME ON REELS", "INSTEAD GET TO WORK ON", "YOUR RESTAURANT BUSINESS"]
+# (text, size, colour) - placed in the empty black band above the photo so it reads at a glance
+NEW_CAPTION = [("DON'T WASTE YOUR TIME ON REELS", 50, WHITE),
+               ("GET TO WORK ON YOUR", 76, (255, 214, 0)),
+               ("RESTAURANT BUSINESS", 76, (255, 214, 0))]
+CAPTION_TOP, CAPTION_BOTTOM = 95, 385     # black band above the photo
+PHOTO_CUT, PHOTO_END = 1215, 1530         # photo is cropped here, above where the old caption sat
+CREDIT = "@oru_maadu_memes"
 CTA_TOP = ["track every bill & every rupee", 'with "smart serve"', "(it's on the play store)", "click the link in my bio"]
 CTA_BOTTOM = 'comment "APP" & I\'ll send you the name'
 CTA_LEN = 6.8                     # includes the dissolve overlap
@@ -32,12 +38,17 @@ def erase_caption(img):
     img.paste(fill, (x0, y0))
 
 def draw_caption(img, lines):
-    d = ImageDraw.Draw(img); f = font(54, "ExtraBold"); lh = 64
-    yc = (BAND[1] + BAND[3]) / 2 - 10
-    y0 = yc - lh * len(lines) / 2
-    for i, ln in enumerate(lines):
-        w = d.textlength(ln, font=f)
-        d.text(((W - w) / 2, y0 + i * lh), ln, font=f, fill=WHITE, stroke_width=4, stroke_fill=BLACK)
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, W, CAPTION_BOTTOM], fill=BLACK)
+    d.rectangle([0, PHOTO_CUT, W, PHOTO_END], fill=BLACK)          # drop the strip the old caption was on
+    f = font(30, "SemiBold"); w = d.textlength(CREDIT, font=f)
+    d.text(((W - w) / 2, PHOTO_CUT + 18), CREDIT, font=f, fill=(150, 150, 150))  # keep the meme page's credit
+    gap = 14; total = sum(sz for _, sz, _ in lines) + gap * (len(lines) - 1)
+    y = CAPTION_TOP + (CAPTION_BOTTOM - CAPTION_TOP - total) / 2
+    for txt, sz, col in lines:
+        f = font(sz, "Black"); w = d.textlength(txt, font=f)
+        d.text(((W - w) / 2, y - sz * 0.12), txt, font=f, fill=col)
+        y += sz + gap
 
 def source_frames():
     p = subprocess.Popen(["ffmpeg", "-loglevel", "error", "-t", str(CUT), "-i", SRC,
