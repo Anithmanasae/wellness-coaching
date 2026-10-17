@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import soundtrack as st
 from make_photo_memes import emoji_img
+from make_reel_variations import scene_cta_comment
 
 SRC = sys.argv[1]
 OUT = os.path.join(HERE, "smartserve_reel_24_calls.mp4")
@@ -23,7 +24,7 @@ SEG1 = (0.0, 3.8)        # before opening (original caption)
 SEG2 = (7.3, 12.8)       # after opening - crying on the phone (original caption)
 TWIST = 1.3              # freeze + plot twist
 SEG4 = (0.2, 3.8)        # happy planning again, relabelled
-END = 5.6
+END = 6.4
 VIDEO_BOTTOM = 1250      # source video area ends here (black bar below)
 CALLS = ["Sir, Swiggy order cancelled again", "Sir, cash is ₹3,000 short today",
          "Sir, paneer is over… nobody told us", "Sir, the chef didn't come today"]
@@ -132,11 +133,14 @@ def soundtrack(path, marks, total):
     put(*SEG4, t3, 0.9)
     for i in range(3):
         for j, m in enumerate((84, 91)): st.add(mix, st.pluck(st.note(m), 0.3, 2) * 0.3, t3 + 0.4 + i * 0.7 + j * 0.07)
-    # ringtone: two-tone marimba pattern, repeating
-    ring = (76, 83, 81, 76, 83, 88)
-    for r in range(int((total - t4) / 1.2) + 1):
-        for j, m in enumerate(ring): st.add(mix, st.pluck(st.note(m), 0.25, 3) * 0.3, t4 + r * 1.2 + j * 0.1)
-        st.add(mix, st.kick() * 0.2, t4 + r * 1.2)
+    # standard CTA audio: transition sound effect, then ka-ching + music
+    raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", os.path.join(HERE, "assets", "cta_transition_sfx.wav"),
+                          "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"], capture_output=True).stdout
+    fx = np.frombuffer(raw, np.int16).astype(np.float64) / 32768; st.add(mix, fx, t4)
+    m0 = t4 + len(fx) / SR - 0.1
+    st.add(mix, st.music_uplift(total - m0), m0)
+    for at, name in ((0.2, "kaching"), (0.05, "sparkle"), (0.6, "pop")):
+        fn, g = st.SFX[name]; st.add(mix, fn(), m0 + at, g)
     st.finish(mix, path, total)
 
 if __name__ == "__main__":
@@ -159,7 +163,7 @@ if __name__ == "__main__":
     for i, fr in enumerate(frames(*SEG4)):
         new_caption(fr); calm_lines(fr, i / FPS); emit(fr)
     for i in range(int(END * FPS)):
-        img = Image.new("RGB", (W, H)); end_card(img, i / FPS); emit(img)
+        img = Image.new("RGB", (W, H)); scene_cta_comment(img, i / FPS); emit(img)
     ff.stdin.close(); ff.wait(); os.remove(wav)
     tmp = OUT[:-4] + "_tmp.mp4"; os.replace(OUT, tmp)
     out = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", tmp, "-af", "ebur128", "-f", "null", "-"], capture_output=True, text=True).stderr
