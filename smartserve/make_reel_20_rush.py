@@ -124,18 +124,21 @@ def end_card(img, t):
             d.text((x0 + 36, y), l, font=ff, fill=col)
             w = d.textlength(r, font=ff); d.text((x1 - 36 - w, y), r, font=ff, fill=(20, 150, 70) if r != "CHILL" else BLUE)
     done = len(RECEIPT) * LINE_T + 0.3
-    if t > done:
-        a = ease((t - done) / 0.4)
-        f2 = font(66, "Black"); txt = "Run every rush like this"; w = d.textlength(txt, font=f2)
-        d.text(((W - w) / 2, 1265 + int(30 * (1 - a))), txt, font=f2, fill=WHITE)
-        f3 = font(46, "Bold"); pill = "Smart Serve · free on Play Store"; w = d.textlength(pill, font=f3)
-        d.rounded_rectangle([(W - w) / 2 - 34, 1370, (W + w) / 2 + 34, 1450], 40, fill=WHITE)
-        d.text(((W - w) / 2, 1382), pill, font=f3, fill=BLUE)
+    if t > done:  # app icon pops in under the receipt
+        a = ease((t - done) / 0.35); sz = int(180 * (0.6 + 0.4 * a) + 18 * math.sin(clamp((t - done) / 0.35) * math.pi))
+        glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(glow).ellipse([W / 2 - 200, 1020, W / 2 + 200, 1420], fill=(120, 190, 255, int(110 * a)))
+        glow = glow.filter(ImageFilter.GaussianBlur(50)); img.paste(glow, (0, 0), glow)
+        l = LOGO.resize((sz, sz), Image.LANCZOS); img.paste(l, (int(W / 2 - sz / 2), int(1220 - sz / 2)), l)
+        d = ImageDraw.Draw(img)
+        f2 = font(54, "Black"); txt = "Run every rush like this"; w = d.textlength(txt, font=f2)
+        d.text(((W - w) / 2, 1330 + int(30 * (1 - a))), txt, font=f2, fill=WHITE)
     if t > done + 0.5:
-        a = ease((t - done - 0.5) / 0.3)
-        f4 = font(58, "Black"); txt = 'Comment "RUSH" for the link'; w = d.textlength(txt, font=f4)
-        d.rounded_rectangle([(W - w) / 2 - 34, 1490, (W + w) / 2 + 34, 1582], 24, fill=(60, 220, 120))
-        d.text(((W - w) / 2, 1501), txt, font=f4, fill=(5, 30, 15))
+        f4 = font(50, "Black"); txt = 'Comment "APP" for the app\'s name'; w = d.textlength(txt, font=f4)
+        d.rounded_rectangle([(W - w) / 2 - 30, 1420, (W + w) / 2 + 30, 1510], 24, fill=(60, 220, 120))
+        d.text(((W - w) / 2, 1432), txt, font=f4, fill=(5, 30, 15))
+        f5 = font(38, "SemiBold"); txt = "free on Play Store · link in bio"; w = d.textlength(txt, font=f5)
+        d.text(((W - w) / 2, 1532), txt, font=f5, fill=(200, 220, 255))
 
 # ---------------- timeline ----------------
 S1 = (0.0, 3.4)        # us before the rush
