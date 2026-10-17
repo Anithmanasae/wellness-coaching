@@ -7,6 +7,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import soundtrack as st
+from make_reel_variations import scene_cta_comment
 
 SRC = sys.argv[1]
 OUT = os.path.join(HERE, "smartserve_reel_25_broadcast.mp4")
@@ -21,7 +22,7 @@ def ease(x): x = clamp(x); return 1 - (1 - x) ** 3
 SEG1 = (0.0, 3.6)            # pre-match
 SEG2 = (5.63, 10.1)          # the rush
 REPLAY = (8.9, 10.1)         # replayed at half speed
-END = 6.2
+END = 7.3
 TICK1 = "PRE-MATCH  •  Team warming up with coffee…  •  calm before the storm  •  "
 TICK2 = "UNBELIEVABLE SCENES IN THE KITCHEN!!  •  orders flying in from every table  •  is that a WATERMELON?!  •  "
 
@@ -147,8 +148,13 @@ def soundtrack(path, t2, t3, t4, total):
     st.add(mix, st.sfx_whoosh() * 0.6, t3 - 0.1); st.add(mix, slow * 0.8, t3)
     st.add(mix, whistle() * 0.35, t4); st.add(mix, crowd(2.0) * 0.3, t4)
     t5 = t4 + 0.9
-    for j, m in enumerate((72, 76, 79, 84, 88)): st.add(mix, st.pluck(st.note(m), 0.8, 3) * 0.3, t5 + j * 0.09)   # fanfare
-    st.add(mix, st.music_uplift(total - t5 - 0.4), t5 + 0.4)
+    # standard CTA audio: transition sound effect, then ka-ching + music
+    fxr = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", os.path.join(HERE, "assets", "cta_transition_sfx.wav"),
+                          "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"], capture_output=True).stdout
+    fx = np.frombuffer(fxr, np.int16).astype(np.float64) / 32768; st.add(mix, fx, t5)
+    m0 = t5 + len(fx) / SR - 0.1; st.add(mix, st.music_uplift(total - m0), m0)
+    for at, name in ((0.2, "kaching"), (0.05, "sparkle"), (0.6, "pop")):
+        fn, g = st.SFX[name]; st.add(mix, fn(), m0 + at, g)
     st.finish(mix, path, total)
 
 if __name__ == "__main__":
@@ -169,7 +175,9 @@ if __name__ == "__main__":
     for k in range(len(rep) * 2):
         fr = rep[k // 2].copy(); replay_overlay(fr, k / FPS); emit(fr)
     for i in range(int(END * FPS)):
-        img = Image.new("RGB", (W, H)); player_card(img, i / FPS); emit(img)
+        img = Image.new("RGB", (W, H)); t = i / FPS
+        player_card(img, t) if t < 0.9 else scene_cta_comment(img, t - 0.9)   # FULL TIME flash, then the standard CTA
+        emit(img)
     ff.stdin.close(); ff.wait(); os.remove(wav)
     tmp = OUT[:-4] + "_tmp.mp4"; os.replace(OUT, tmp)
     out = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", tmp, "-af", "ebur128", "-f", "null", "-"], capture_output=True, text=True).stderr
