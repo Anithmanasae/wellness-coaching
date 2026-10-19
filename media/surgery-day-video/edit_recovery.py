@@ -19,10 +19,15 @@ from edit_tamil import ENC, FPS, H, W, duration, speech_span, subtitle_png
 SCENES = [
     {"ta": "அறுவை சிகிச்சைக்கு பின் விரைவாக குணமடைய ஒரு எளிய வழி உண்டு!",
      "en": "There is a simple way to recover quickly after surgery!",
-     "blur": [(270, 90, 1500, 330, 0, 1.25)]},   # misspelled hospital sign in the first second
+     # Misspelled hospital sign in the first second: erase the lettering, write the real name.
+     "fix_t": (0, 1.3),
+     "fix": [(497, 126, 1186, 256, "", 0, "face"),(505, 140, 1160, 80, "கிளிநொச்சி மாவட்ட பொது வைத்தியசாலை", 62, "sign"),
+             (505, 225, 1160, 60, "DISTRICT GENERAL HOSPITAL KILINOCHCHI", 46, "sign"),
+             (505, 292, 1160, 84, "DGH KILINOCHCHI", 76, "sign")]},
     {"ta": "புகையிலை, வெற்றிலை, பாக்கு நிறுத்தினால் சிகிச்சை இருமடங்கு வேகமாகும்!",
      "en": "Stopping tobacco, betel and areca nut makes treatment twice as fast!",
-     "erase": [(690, 370, 600, 235, 0, None)],   # "Pause"
+     # "Pause" can't be erased cleanly from a moving body, so a Tamil "Stop!" sticker covers it.
+     "fix": [(696, 388, 608, 205, "நிறுத்துங்கள்!", 82, "stop")],
      "blur": [(290, 830, 1340, 245, 0, None)]},  # garbled Veo captions
     {"ta": "புகையிலையை நிறுத்துவதால் ஆக்சிஜன் அதிகரித்து காயம் விரைவில் ஆறும்",
      "en": "Stopping tobacco raises oxygen levels, so wounds heal faster."},
@@ -76,6 +81,24 @@ def fix_png(fixes, path, sample):
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     for x, y, w, h, text, size, *style in fixes:
+        if style and style[0] == "face":  # rebuild a plain sign face, row by row, from its light pixels
+            px = bg.load()
+            for r in range(y, y + h):
+                row = [px[c, r] for c in range(x, x + w, 3)]
+                light = [p for p in row if sum(p) > 3 * 185] or row
+                col = tuple(sorted(v[i] for v in light)[len(light) // 2] for i in range(3))
+                d.line([(x, r), (x + w, r)], fill=col + (255,))
+            continue
+        if style and style[0] == "stop":
+            d.rounded_rectangle([x + 6, y + 10, x + w + 6, y + h + 10], radius=36, fill=(0, 0, 0, 70))
+            d.rounded_rectangle([x, y, x + w, y + h], radius=36, fill=(206, 38, 38, 255), outline="white", width=8)
+            f = font(TA_BOLD, size)
+            while f.getlength(text) > w - 70:
+                size -= 2
+                f = font(TA_BOLD, size)
+            d.text((x + w / 2, y + h / 2 - 16), text, font=f, fill="white", anchor="mm")
+            d.text((x + w / 2, y + h - 34), "STOP", font=font(EN_BOLD, 30), fill=(255, 225, 225), anchor="mm")
+            continue
         if style and style[0] == "badge":
             ta, en = (t.strip() for t in text.split("·"))
             fta, fen = font(TA_BOLD, size), font(EN_BOLD, int(size * 0.8))
@@ -84,9 +107,17 @@ def fix_png(fixes, path, sample):
             d.text((x + 24, y + 10), ta, font=fta, fill="white")
             d.text((x + 24, y + 12 + size * 1.25), en, font=fen, fill=(205, 236, 228))
             continue
-        col = style[0] if style else (38, 38, 38)
         face = EN_BOLD if text.isascii() else TA_BOLD
-        d.text((x + w / 2, y + h / 2), text, font=font(face, size), fill=col, anchor="mm")
+        f = font(face, size)
+        while f.getlength(text) > w and size > 12:  # shrink to fit
+            size -= 2
+            f = font(face, size)
+        if style and style[0] == "sign":  # raised navy letters on a white facade sign
+            d.text((x + w / 2 + 3, y + h / 2 + 4), text, font=f, fill=(150, 150, 160), anchor="mm")
+            d.text((x + w / 2, y + h / 2), text, font=f, fill=(32, 48, 98), anchor="mm")
+            continue
+        col = style[0] if style else (38, 38, 38)
+        d.text((x + w / 2, y + h / 2), text, font=f, fill=col, anchor="mm")
     im.save(path)
 
 
