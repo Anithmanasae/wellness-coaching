@@ -22,9 +22,7 @@ SCENES = [
      "erase": [(560, 880, 800, 195, 0, None)]},  # garbled Veo captions
     {"ta": "புகையிலை, வெற்றிலை, பாக்கு நிறுத்தினால் சிகிச்சை இருமடங்கு வேகமாகும்!",
      "en": "Stopping tobacco, betel and areca nut makes treatment twice as fast!",
-     # "Pause" can't be erased cleanly from a moving body, so a Tamil "Stop!" sticker covers it.
-     "fix": [(696, 388, 608, 205, "நிறுத்துங்கள்!", 82, "stop")],
-     "blur": [(290, 830, 1340, 245, 0, None)]},  # garbled Veo captions
+     "erase": [(110, 890, 1700, 186, 0, None)]},  # garbled Veo captions
     {"ta": "புகையிலையை நிறுத்துவதால் ஆக்சிஜன் அதிகரித்து காயம் விரைவில் ஆறும்",
      "en": "Stopping tobacco raises oxygen levels, so wounds heal faster."},
     {"ta": "நுரையீரல் ஆரோக்கியமாக இருந்தால் அறுவை சிகிச்சைக்கு பின் மூச்சுத்திணறல் இருக்காது.",
@@ -56,7 +54,7 @@ SCENES = [
      "erase": [(540, 960, 850, 115, 0, None)]},  # garbled Veo caption
     {"ta": "உங்கள் அறுவை சிகிச்சை வெற்றிபெற இன்றே இந்த நல்ல முடிவை எடுங்கள்.",
      "en": "Make this good decision today for a successful surgery.",
-     "erase": [(390, 860, 1100, 160, 0, None)]},  # garbled caption
+     "erase": [(380, 830, 1150, 175, 0, None)]},  # garbled caption
     # Closing card: the message is written on the card itself, so no bottom subtitle.
     {"ta": None, "en": None,
      # Starts after the zoom-in (which shows the misspelled name) and ends before the flare.
