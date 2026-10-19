@@ -59,9 +59,11 @@ SCENES = [
      "erase": [(390, 860, 1100, 160, 0, None)]},  # garbled caption
     # Closing card: the message is written on the card itself, so no bottom subtitle.
     {"ta": None, "en": None,
-     "erase": [(140, 535, 1430, 95, 0.5, None), (140, 650, 1440, 270, 0.5, None)],
-     "fix_t": (0.9, 7.4),
-     "fix": [(160, 540, 1240, 80, "DISTRICT GENERAL HOSPITAL KILINOCHCHI", 40, (22, 78, 132)),
+     # Starts after the zoom-in (which shows the misspelled name) and ends before the flare.
+     "trim": (1.0, 6.5),
+     "fix_t": (0, 5.5),
+     "fix": [(120, 530, 1480, 410, "", 0, "plate"),  # card with the old lettering removed
+             (160, 540, 1240, 80, "DISTRICT GENERAL HOSPITAL KILINOCHCHI", 40, (22, 78, 132)),
              (160, 660, 1240, 76, "ஒரு சிறிய இடைவெளி... பெரிய ஆரோக்கியம்!", 46, (16, 124, 117)),
              (160, 740, 1240, 76, "விரைவாக குணமடைய வாழ்த்துகிறோம்!", 46, (16, 124, 117)),
              (160, 830, 1240, 60, "A small break... big health! Wishing you a speedy recovery!", 30, (60, 96, 110))]},
@@ -84,6 +86,21 @@ def fix_png(fixes, path, sample):
                 light = [p for p in row if sum(p) > 3 * 185] or row
                 col = tuple(sorted(v[i] for v in light)[len(light) // 2] for i in range(3))
                 d.line([(x, r), (x + w, r)], fill=col + (255,))
+            continue
+        if style and style[0] == "plate":
+            import cv2
+            import numpy as np
+            frame = np.array(bg)[y:y + h, x:x + w, ::-1].copy()
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            dark = (gray < 228).astype(np.uint8)  # letters and their soft edges
+            n, lab, stats, _ = cv2.connectedComponentsWithStats(dark, connectivity=8)
+            mask = np.zeros_like(dark)
+            for k in range(1, n):  # keep shapes touching the top edge (the title), remove the rest
+                if stats[k, cv2.CC_STAT_TOP] > 0:
+                    mask[lab == k] = 255
+            mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=7)
+            clean = cv2.inpaint(frame, mask, 7, cv2.INPAINT_TELEA)[:, :, ::-1]
+            im.paste(Image.fromarray(clean).convert("RGBA"), (x, y))
             continue
         if style and style[0] == "stop":
             d.rounded_rectangle([x + 6, y + 10, x + w + 6, y + h + 10], radius=36, fill=(0, 0, 0, 70))
@@ -118,7 +135,8 @@ def fix_png(fixes, path, sample):
 
 
 def make_scene(i, sc, src, out, tmp):
-    dur = duration(src)
+    trim = sc.get("trim")
+    dur = trim[1] - trim[0] if trim else duration(src)
     chain = f"[0:v]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1,fps={FPS}[b0]"
     last = "b0"
     for k, (x, y, w, h, t0, t1) in enumerate(sc.get("erase", []) + [WATERMARK + (0, None)]):
@@ -130,10 +148,11 @@ def make_scene(i, sc, src, out, tmp):
         chain += (f";[{last}]split[m{k}][c{k}];[c{k}]crop={w}:{h}:{x}:{y},boxblur={min(28, min(w, h) // 4)}:3[bl{k}];"
                   f"[m{k}][bl{k}]overlay={x}:{y}:enable='between(t,{t0},{t1})'[b{k + 1}]")
         last = f"b{k + 1}"
-    inputs = ["-i", src]
+    inputs = (["-ss", str(trim[0]), "-to", str(trim[1])] if trim else []) + ["-i", src]
     if sc.get("fix"):
         sample = os.path.join(tmp, f"r_bg{i:02d}.png")
-        subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-ss", "1", "-i", src,
+        at = str(trim[0] + 2.5) if trim else "1"
+        subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-ss", at, "-i", src,
                                "-vf", f"scale={W}:{H}", "-frames:v", "1", sample])
         fx = os.path.join(tmp, f"r_fix{i:02d}.png")
         fix_png(sc["fix"], fx, sample)
