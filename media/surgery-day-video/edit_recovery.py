@@ -19,11 +19,7 @@ from edit_tamil import ENC, FPS, H, W, duration, speech_span, subtitle_png
 SCENES = [
     {"ta": "அறுவை சிகிச்சைக்கு பின் விரைவாக குணமடைய ஒரு எளிய வழி உண்டு!",
      "en": "There is a simple way to recover quickly after surgery!",
-     # Misspelled hospital sign in the first second: erase the lettering, write the real name.
-     "fix_t": (0, 1.3),
-     "fix": [(497, 126, 1186, 256, "", 0, "face"),(505, 140, 1160, 80, "கிளிநொச்சி மாவட்ட பொது வைத்தியசாலை", 62, "sign"),
-             (505, 225, 1160, 60, "DISTRICT GENERAL HOSPITAL KILINOCHCHI", 46, "sign"),
-             (505, 292, 1160, 84, "DGH KILINOCHCHI", 76, "sign")]},
+     "erase": [(560, 880, 800, 195, 0, None)]},  # garbled Veo captions
     {"ta": "புகையிலை, வெற்றிலை, பாக்கு நிறுத்தினால் சிகிச்சை இருமடங்கு வேகமாகும்!",
      "en": "Stopping tobacco, betel and areca nut makes treatment twice as fast!",
      # "Pause" can't be erased cleanly from a moving body, so a Tamil "Stop!" sticker covers it.
@@ -57,7 +53,12 @@ SCENES = [
      "erase": [(230, 20, 1100, 170, 0, 2.4)]},   # garbled calendar month names
     {"ta": "நிறுத்த சிரமமாக இருந்தால் நம் மருத்துவக் குழுவின் உதவியை நாடுங்கள்!",
      "en": "If stopping is hard, ask our medical team for help!",
-     "erase": [(560, 880, 800, 195, 0, None)]},  # garbled Veo captions
+     # Clip opens on a misspelled hospital sign: rebuild the sign face and write the real name.
+     "fix_t": (0, 1.3),
+     "fix": [(497, 126, 1186, 256, "", 0, "face"),
+             (505, 140, 1160, 80, "கிளிநொச்சி மாவட்ட பொது வைத்தியசாலை", 62, "sign"),
+             (505, 225, 1160, 60, "DISTRICT GENERAL HOSPITAL KILINOCHCHI", 46, "sign"),
+             (505, 292, 1160, 84, "DGH KILINOCHCHI", 76, "sign")]},
     {"ta": "உங்கள் அறுவை சிகிச்சை வெற்றிபெற இன்றே இந்த நல்ல முடிவை எடுங்கள்.",
      "en": "Make this good decision today for a successful surgery.",
      "erase": [(390, 860, 1100, 160, 0, None)]},  # garbled caption
