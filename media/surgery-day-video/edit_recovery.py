@@ -73,6 +73,7 @@ def fix_png(fixes, path, sample):
     """Correct Tamil labels, drawn over areas already erased with delogo."""
     from PIL import Image, ImageDraw
     from edit_tamil import EN_BOLD, TA_BOLD, font
+    EN_BLACK = "/usr/share/fonts/opentype/inter/Inter-Black.otf"
     bg = Image.open(sample).convert("RGB")
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
@@ -109,6 +110,13 @@ def fix_png(fixes, path, sample):
                 f = font(TA_BOLD, size)
             d.text((x + w / 2, y + h / 2 - 16), text, font=f, fill="white", anchor="mm")
             d.text((x + w / 2, y + h - 34), "STOP", font=font(EN_BOLD, 30), fill=(255, 225, 225), anchor="mm")
+            continue
+        if style and style[0] == "title":  # bold outlined title text, e.g. "DO NOT RUIN YOUR CAST!"
+            f = font(EN_BLACK, size)
+            d.text((x + w / 2 + 6, y + h / 2 + 8), text, font=f, fill=(20, 24, 60, 160), anchor="mm",
+                   stroke_width=12, stroke_fill=(20, 24, 60, 160))
+            d.text((x + w / 2, y + h / 2), text, font=f, fill=style[1], anchor="mm",
+                   stroke_width=10, stroke_fill=(24, 30, 72))
             continue
         if style and style[0] == "badge":
             ta, en = (t.strip() for t in text.split("·"))
