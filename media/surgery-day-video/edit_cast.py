@@ -51,10 +51,15 @@ SCENES = [
      "fix": [(130, 300, 620, 120, "DO NOT", 112, "title", ORANGE),
              (130, 410, 620, 115, "RUIN YOUR", 100, "title", WHITE),
              (130, 520, 620, 125, "CAST!", 118, "title", TEAL)]},
-    {"ta": None, "en": None},
-    {"ta": None, "en": None},
-    {"ta": None, "en": None},
-    {"ta": None, "en": None},
+    {"ta": None, "en": None},   # 2: 48-hour drying rule
+    {"ta": None, "en": None},   # 3: plastic cover
+    {"ta": None, "en": None},   # 4: ruler warning
+    {"ta": None, "en": None},   # 5: hair dryer
+    {"ta": None, "en": None},   # 6: raise the limb on pillows
+    {"ta": None, "en": None},   # 7: move fingers and toes
+    {"ta": None, "en": None},   # 8: warning signs (pain, numbness, blue toes/fingers)
+    # 9: closing thumbs up. Veo writes "Uertntroch" across him from 5.0 s, so the clip ends just before.
+    {"ta": None, "en": None, "trim": (0, 4.95)},
 ]
 
 
