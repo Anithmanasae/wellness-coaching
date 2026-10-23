@@ -16,6 +16,18 @@ TITLE = "Mastering Your Plaster"
 SUBTITLE = "How to Care for Your POP Cast"
 
 
+LOGO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "ghemi-logo.jpg")
+
+
+def logo_png(path):
+    """Full-screen GHEMI logo card (the logo has a white background)."""
+    im = Image.new("RGB", (W, H), "white")
+    lg = Image.open(LOGO).convert("RGB")
+    lg.thumbnail((H - 60, H - 60), Image.LANCZOS)
+    im.paste(lg, ((W - lg.size[0]) // 2, (H - lg.size[1]) // 2))
+    im.save(path)
+
+
 def title_png(path, logo=None):
     """Opening card: the GHEMI logo (when supplied) and the title."""
     import numpy as np
@@ -33,7 +45,7 @@ def title_png(path, logo=None):
         im.paste(lg, (int(W / 2 - lg.size[0] / 2), y), mask)
         y += lg.size[1] + 70
     else:
-        y = 360
+        y = 470
     d.text((W / 2, y), TITLE, font=font(EN_BOLD, 96), fill="white", anchor="mm")
     d.text((W / 2, y + 100), SUBTITLE, font=font(EN_MED, 54), fill=(205, 236, 228), anchor="mm")
     d.rectangle([W / 2 - 70, y + 160, W / 2 + 70, y + 165], fill=(255, 214, 140))
@@ -68,9 +80,13 @@ def main():
     tmp = os.path.join(out, "parts")
     os.makedirs(tmp, exist_ok=True)
     title = os.path.join(tmp, "c_title.png")
-    title_png(title, os.environ.get("LOGO"))
-    parts = [os.path.join(tmp, "c_title.mp4")]  # new series: no hospital intro clip
-    make_card(title, 5.0, parts[0], tmp)
+    title_png(title)
+    logo = os.path.join(tmp, "c_logo.png")
+    logo_png(logo)
+    # New series: GHEMI logo, then the title card (no hospital intro clip).
+    parts = [os.path.join(tmp, "c_logo.mp4"), os.path.join(tmp, "c_title.mp4")]
+    make_card(logo, 4.0, parts[0], tmp)
+    make_card(title, 5.0, parts[1], tmp)
     for i, (sc, src) in enumerate(zip(SCENES, sources), 1):
         part = os.path.join(tmp, f"c_scene{i:02d}.mp4")
         print(f"scene {i}: {make_scene(i, sc, src, part, tmp):.1f}s", flush=True)
