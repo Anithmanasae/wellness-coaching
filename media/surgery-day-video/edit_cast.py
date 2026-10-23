@@ -10,14 +10,14 @@ import sys
 from PIL import Image, ImageDraw
 
 from edit_recovery import make_scene
-from edit_tamil import EN_BOLD, EN_MED, H, HOSPITAL_EN, HOSPITAL_TA, TA_REG, W, WARD_EN, WARD_TA, font, make_card
+from edit_tamil import EN_BOLD, EN_MED, H, W, font, make_card
 
 TITLE = "Mastering Your Plaster"
 SUBTITLE = "How to Care for Your POP Cast"
 
 
 def title_png(path, logo=None):
-    """Opening card: optional GHEMI logo, the title, then the hospital and ward."""
+    """Opening card: the GHEMI logo (when supplied) and the title."""
     import numpy as np
     ys = np.linspace(0, 1, H)[:, None, None]
     top, bot = np.array([18, 128, 110]), np.array([14, 52, 60])
@@ -37,8 +37,6 @@ def title_png(path, logo=None):
     d.text((W / 2, y), TITLE, font=font(EN_BOLD, 96), fill="white", anchor="mm")
     d.text((W / 2, y + 100), SUBTITLE, font=font(EN_MED, 54), fill=(205, 236, 228), anchor="mm")
     d.rectangle([W / 2 - 70, y + 160, W / 2 + 70, y + 165], fill=(255, 214, 140))
-    d.text((W / 2, y + 215), HOSPITAL_TA + " - " + WARD_TA, font=font(TA_REG, 30), fill="white", anchor="mm")
-    d.text((W / 2, y + 258), HOSPITAL_EN + " · " + WARD_EN, font=font(EN_MED, 26), fill=(205, 236, 228), anchor="mm")
     im.save(path)
 
 ORANGE, WHITE, TEAL = (245, 168, 28), (255, 255, 255), (32, 172, 200)
@@ -66,7 +64,7 @@ def main():
     os.makedirs(tmp, exist_ok=True)
     title = os.path.join(tmp, "c_title.png")
     title_png(title, os.environ.get("LOGO"))
-    parts = [os.path.join(tmp, "c_title.mp4"), os.path.join(prev_parts, "p_clip00.mp4")]
+    parts = [os.path.join(tmp, "c_title.mp4")]  # new series: no hospital intro clip
     make_card(title, 5.0, parts[0], tmp)
     for i, (sc, src) in enumerate(zip(SCENES, sources), 1):
         part = os.path.join(tmp, f"c_scene{i:02d}.mp4")
