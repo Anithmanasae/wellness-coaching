@@ -16,13 +16,13 @@ TITLE = "Mastering Your Plaster"
 SUBTITLE = "How to Care for Your POP Cast"
 
 
-LOGO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "ghemi-logo.jpg")
+LOGO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "ghemi-logo.png")
 
 
 def logo_png(path):
-    """Full-screen GHEMI logo card (the logo has a white background)."""
-    im = Image.new("RGB", (W, H), "white")
+    """Full-screen GHEMI logo card, filled with the logo's own background colour."""
     lg = Image.open(LOGO).convert("RGB")
+    im = Image.new("RGB", (W, H), lg.getpixel((5, 5)))
     lg.thumbnail((H - 60, H - 60), Image.LANCZOS)
     im.paste(lg, ((W - lg.size[0]) // 2, (H - lg.size[1]) // 2))
     im.save(path)
@@ -70,8 +70,7 @@ SCENES = [
     {"ta": None, "en": None},   # 6: raise the limb on pillows
     {"ta": None, "en": None},   # 7: move fingers and toes
     {"ta": None, "en": None},   # 8: warning signs (pain, numbness, blue toes/fingers)
-    # 9: closing thumbs up. Veo writes "Uertntroch" across him from 5.0 s, so the clip ends just before.
-    {"ta": None, "en": None, "trim": (0, 4.95)},
+    {"ta": None, "en": None},   # 9: summary card (keep dry, elevate, don't scratch, stay alert)
 ]
 
 
