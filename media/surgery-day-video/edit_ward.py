@@ -28,6 +28,19 @@ SCENES = [
 ]
 
 
+SUB_TA, SUB_EN = SCENES[0]["ta"], SCENES[0]["en"]
+
+# Other takes of the same welcome, each made into its own video.
+TAKES = {
+    "ward16-welcome-tamil-b": {"ta": SUB_TA, "en": SUB_EN,
+                               # opens on a misspelled caption and sign; start at the cut to Vikash
+                               "trim": (2.0, 10.0), "sub_t": (0.2, 8.0)},
+    "ward16-welcome-tamil-c": {"ta": SUB_TA, "en": SUB_EN,
+                               # its own opening caption is correct; subtitle starts after it
+                               "sub_t": (1.5, 10.0)},
+}
+
+
 def title_png(path):
     ys = np.linspace(0, 1, H)[:, None, None]
     top, bot = np.array([18, 128, 110]), np.array([14, 52, 60])
@@ -42,7 +55,28 @@ def title_png(path):
     im.save(path)
 
 
+def build_take(out, name, src):
+    tmp = os.path.join(out, "parts")
+    os.makedirs(tmp, exist_ok=True)
+    logo, title = os.path.join(tmp, "w_logo.png"), os.path.join(tmp, "w_title.png")
+    logo_png(logo)
+    title_png(title)
+    parts = [os.path.join(tmp, "w_logo.mp4"), os.path.join(tmp, "w_title.mp4"), os.path.join(tmp, f"{name}.mp4")]
+    make_card(logo, 4.0, parts[0], tmp)
+    make_card(title, 5.0, parts[1], tmp)
+    make_scene(1, TAKES[name], src, parts[2], tmp)
+    listing = os.path.join(tmp, f"{name}.txt")
+    with open(listing, "w") as f:
+        f.writelines(f"file '{p}'\n" for p in parts)
+    final = os.path.join(out, f"{name}.mp4")
+    subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", listing,
+                           "-c", "copy", "-movflags", "+faststart", final])
+    print("wrote", final)
+
+
 def main():
+    if sys.argv[1] == "--take":
+        return build_take(sys.argv[2], sys.argv[3], sys.argv[4])
     out, *sources = sys.argv[1:]
     tmp = os.path.join(out, "parts")
     os.makedirs(tmp, exist_ok=True)

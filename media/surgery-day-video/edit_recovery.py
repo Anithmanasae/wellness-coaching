@@ -167,7 +167,7 @@ def make_scene(i, sc, src, out, tmp):
         chain += f";[{last}][{inputs.count('-i') - 1}:v]overlay=enable='between(t,{t0},{t1})'[f]"
         last = "f"
     if sc["ta"]:
-        s0, s1 = speech_span(src, dur)
+        s0, s1 = sc["sub_t"] if "sub_t" in sc else speech_span(src, dur)
         sub = os.path.join(tmp, f"r_sub{i:02d}.png")
         subtitle_png(sc["ta"], sc["en"], sub)
         inputs += ["-loop", "1", "-i", sub]
