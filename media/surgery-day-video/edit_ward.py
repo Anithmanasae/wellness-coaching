@@ -9,7 +9,6 @@ import sys
 import numpy as np
 from PIL import Image, ImageDraw
 
-from edit_cast import logo_png
 from edit_recovery import make_scene
 from edit_tamil import EN_MED, H, TA_BOLD, W, font, make_card
 from fix_moving_sign import fix_sign
@@ -58,13 +57,11 @@ def title_png(path):
 def build_take(out, name, src):
     tmp = os.path.join(out, "parts")
     os.makedirs(tmp, exist_ok=True)
-    logo, title = os.path.join(tmp, "w_logo.png"), os.path.join(tmp, "w_title.png")
-    logo_png(logo)
+    title = os.path.join(tmp, "w_title.png")
     title_png(title)
-    parts = [os.path.join(tmp, "w_logo.mp4"), os.path.join(tmp, "w_title.mp4"), os.path.join(tmp, f"{name}.mp4")]
-    make_card(logo, 4.0, parts[0], tmp)
-    make_card(title, 5.0, parts[1], tmp)
-    make_scene(1, TAKES[name], src, parts[2], tmp)
+    parts = [os.path.join(tmp, "w_title.mp4"), os.path.join(tmp, f"{name}.mp4")]
+    make_card(title, 5.0, parts[0], tmp)
+    make_scene(1, TAKES[name], src, parts[1], tmp)
     listing = os.path.join(tmp, f"{name}.txt")
     with open(listing, "w") as f:
         f.writelines(f"file '{p}'\n" for p in parts)
@@ -80,12 +77,10 @@ def main():
     out, *sources = sys.argv[1:]
     tmp = os.path.join(out, "parts")
     os.makedirs(tmp, exist_ok=True)
-    logo, title = os.path.join(tmp, "w_logo.png"), os.path.join(tmp, "w_title.png")
-    logo_png(logo)
+    title = os.path.join(tmp, "w_title.png")
     title_png(title)
-    parts = [os.path.join(tmp, "w_logo.mp4"), os.path.join(tmp, "w_title.mp4")]
-    make_card(logo, 4.0, parts[0], tmp)
-    make_card(title, 5.0, parts[1], tmp)
+    parts = [os.path.join(tmp, "w_title.mp4")]  # opens on the title card (no GHEMI logo card)
+    make_card(title, 5.0, parts[0], tmp)
     for i, (sc, src) in enumerate(zip(SCENES, sources), 1):
         if "sign" in sc:
             fixed = os.path.join(tmp, f"w_sign{i:02d}.mp4")
