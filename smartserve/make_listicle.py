@@ -1,7 +1,7 @@
 # Listicle reels (the "5 things…" white-box format): stock photo/clip with the title box for 5s,
 # then the same shot with "Read the description below" + 👇 for 2s. Total 7s, no CTA screen;
 # the list (and the Comment "APP" ask) lives in the caption.
-# Usage: python3 make_listicle.py <stock.jpg|mp4> "<title>" <reel_number> <name>
+# Usage: python3 make_listicle.py <stock.jpg|mp4> "<title>" <reel_number> <name> [box_top_y, default 1020]
 import os, random, subprocess, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -10,6 +10,7 @@ import soundtrack as st
 from make_photo_memes import emoji_img
 
 SRC, TITLE, NUM, NAME = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
+BOX_Y = int(sys.argv[5]) if len(sys.argv) > 5 else 1020
 OUT = os.path.join(HERE, f"smartserve_reel_{NUM:02d}_list_{NAME}.mp4")
 W, H, FPS, SR = 1080, 1920, 30, 44100
 HOOK, TAIL = 5.0, 2.0
@@ -44,7 +45,7 @@ def title_box(img, text=None, emoji=None):
         if lines and d.textlength(lines[-1] + " " + w, font=f) <= 700: lines[-1] += " " + w
         else: lines.append(w)
     lh = 76; bw = max(d.textlength(l, font=f) for l in lines) + 90; bh = lh * len(lines) + 70 + (110 if emoji else 0)
-    x0, y0 = (W - bw) / 2, 1020
+    x0, y0 = (W - bw) / 2, BOX_Y
     d.rectangle([x0, y0, x0 + bw, y0 + bh], fill=(255, 255, 255))
     for i, l in enumerate(lines):
         w = d.textlength(l, font=f); d.text(((W - w) / 2, y0 + 30 + i * lh), l, font=f, fill=(25, 25, 25))
