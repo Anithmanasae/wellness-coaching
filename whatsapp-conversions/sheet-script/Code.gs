@@ -32,12 +32,16 @@ function setupColumns() {
   sheet.getRange(2, COL.leadSent, sheet.getMaxRows() - 1, 2).setNumberFormat('dd-mmm-yyyy hh:mm');
 }
 
-/** Run once: makes the sheet send events when you edit Status or Deal value. */
+/**
+ * Run once: sends events when you edit Status or Deal value, and also checks
+ * every hour (edits made by Claude or other tools don't fire the edit trigger).
+ */
 function installTrigger() {
   ScriptApp.getProjectTriggers()
-    .filter(t => t.getHandlerFunction() === 'onStatusEdit')
+    .filter(t => ['onStatusEdit', 'processAllRows'].indexOf(t.getHandlerFunction()) !== -1)
     .forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('onStatusEdit').forSpreadsheet(SpreadsheetApp.getActive()).onEdit().create();
+  ScriptApp.newTrigger('processAllRows').timeBased().everyHours(1).create();
 }
 
 /** Webhook → sheet: one new row per ad lead. */
@@ -93,8 +97,14 @@ function onStatusEdit(e) {
 
 /** Can also be run by hand from the Apps Script editor to resend anything missed. */
 function processAllRows() {
-  const sheet = getSheet_();
-  for (let r = 2; r <= sheet.getLastRow(); r++) processRow_(sheet, r);
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) return;
+  try {
+    const sheet = getSheet_();
+    for (let r = 2; r <= sheet.getLastRow(); r++) processRow_(sheet, r);
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function processRow_(sheet, r) {
