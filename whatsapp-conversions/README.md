@@ -71,7 +71,7 @@ Meta app → **WhatsApp → Configuration → Webhook → Edit**:
 
 - New ad chats appear in **Ad Leads** automatically. Fill in business type, city and so on as usual.
 - Change **Status** as the chat moves. Use **Qualified** only for real business owners with a need and a budget: that's what Meta learns from.
-- Chats that didn't come from an ad have no click ID, so the script leaves them alone.
+- Rows without a click ID (for example, leads you add by hand) are matched by the **WhatsApp number** column instead: the script sends Meta a hashed copy of the number with a **Lead** / **Purchase** event. Fill in the number with country code if it isn't Indian (e.g. 971...); 10-digit numbers are treated as Indian.
 - Missed something? In Apps Script, run **processAllRows** to send anything not yet sent.
 
 ## Files

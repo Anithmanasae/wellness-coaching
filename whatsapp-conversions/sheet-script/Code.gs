@@ -3,7 +3,8 @@
  *
  * 1. doPost: receives new ad leads from the webhook and adds a row to "Ad Leads".
  * 2. onStatusEdit: when a row's Status becomes Qualified / Proposal sent / Won,
- *    sends LeadSubmitted to Meta; when it is Won with a Deal value, sends Purchase.
+ *    sends a lead event to Meta; when it is Won with a Deal value, sends Purchase.
+ *    Rows from the webhook are matched by click ID; other rows by phone number.
  *
  * Script properties (Extensions → Apps Script → Project Settings → Script properties):
  *   DATASET_ID      1547338533449042  (from your Events Manager link)
@@ -100,28 +101,57 @@ function processRow_(sheet, r) {
   const v = sheet.getRange(r, 1, 1, COL.purchaseSent).getValues()[0];
   const clid = v[COL.ctwaClid - 1];
   const waba = v[COL.wabaId - 1];
+  const phone = normalizePhone_(v[COL.phone - 1]);
   const status = v[COL.status - 1];
-  if (!clid || !waba) return; // only rows that came from an ad can be matched
+
+  // Ad chats captured by the webhook carry a click ID (best match).
+  // Everything else is matched by the customer's phone number (hashed).
+  let base, key, leadName;
+  if (clid && waba) {
+    key = clid;
+    leadName = 'LeadSubmitted';
+    base = {
+      action_source: 'business_messaging', messaging_channel: 'whatsapp',
+      user_data: { whatsapp_business_account_id: String(waba), ctwa_clid: clid },
+    };
+  } else if (phone) {
+    key = phone;
+    leadName = 'Lead';
+    base = {
+      action_source: 'system_generated',
+      user_data: { ph: [sha256_(phone)], country: [sha256_('in')] },
+    };
+  } else {
+    return; // no click ID and no phone number: nothing Meta can match
+  }
 
   if (LEAD_STATUSES.indexOf(status) !== -1 && !v[COL.leadSent - 1]) {
-    const res = sendEvent_({
-      event_name: 'LeadSubmitted',
-      event_id: 'lead-' + clid,
-      user_data: { whatsapp_business_account_id: String(waba), ctwa_clid: clid },
-    });
-    record_(sheet, r, COL.leadSent, res);
+    const ev = Object.assign({}, base, { event_name: leadName, event_id: 'lead-' + key });
+    if (leadName === 'Lead') ev.custom_data = { event_source: 'crm', lead_event_source: 'Log Book sheet' };
+    record_(sheet, r, COL.leadSent, sendEvent_(ev));
   }
 
-  const value = Number(v[COL.dealValue - 1]);
+  const value = Number(String(v[COL.dealValue - 1]).replace(/[^0-9.]/g, ''));
   if (status === 'Won' && value > 0 && !v[COL.purchaseSent - 1]) {
-    const res = sendEvent_({
+    const res = sendEvent_(Object.assign({}, base, {
       event_name: 'Purchase',
-      event_id: 'purchase-' + clid,
-      user_data: { whatsapp_business_account_id: String(waba), ctwa_clid: clid },
-      custom_data: { currency: 'INR', value: value, order_id: 'order-' + clid },
-    });
+      event_id: 'purchase-' + key,
+      custom_data: { currency: 'INR', value: value, order_id: 'order-' + key },
+    }));
     record_(sheet, r, COL.purchaseSent, res);
   }
+}
+
+/** Digits only, with India's 91 in front: "098765 43210" -> "919876543210". */
+function normalizePhone_(raw) {
+  let d = String(raw || '').replace(/\D/g, '').replace(/^0+/, '');
+  if (d.length === 10) d = '91' + d;
+  return d.length >= 11 ? d : '';
+}
+
+function sha256_(text) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text, Utilities.Charset.UTF_8)
+    .map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('');
 }
 
 function sendEvent_(event) {
@@ -129,11 +159,7 @@ function sendEvent_(event) {
   const version = props.getProperty('GRAPH_VERSION') || 'v23.0';
   const url = 'https://graph.facebook.com/' + version + '/' + props.getProperty('DATASET_ID') + '/events';
   const payload = {
-    data: [Object.assign({
-      event_time: Math.floor(Date.now() / 1000),
-      action_source: 'business_messaging',
-      messaging_channel: 'whatsapp',
-    }, event)],
+    data: [Object.assign({ event_time: Math.floor(Date.now() / 1000) }, event)],
     access_token: props.getProperty('ACCESS_TOKEN'),
   };
   const testCode = props.getProperty('TEST_EVENT_CODE');
