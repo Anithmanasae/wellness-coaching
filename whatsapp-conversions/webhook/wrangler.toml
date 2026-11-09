@@ -1,0 +1,6 @@
+name = "whatsapp-leads-webhook"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# Set these in the Cloudflare dashboard (or with `npx wrangler secret put NAME`):
+# VERIFY_TOKEN, APP_SECRET, SHEET_URL, SHARED_SECRET
